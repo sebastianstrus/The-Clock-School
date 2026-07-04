@@ -1,0 +1,335 @@
+//
+//  SettingsView.swift
+//  The Clock School
+//
+//  Created by Sebastian Strus on 2/21/26.
+//
+
+
+import SwiftUI
+import MessageUI
+
+struct SettingsView: View {
+    
+    @EnvironmentObject var settings: SettingsManager
+    @Environment(\.colorScheme) var colorScheme
+    
+    @State private var showProgressAlert = false
+    @State private var showCacheAlert = false
+    @State private var showMailComposer = false
+    @State private var showingLanguageHelp = false
+    @State private var showOnboarding: Bool = false
+        
+    var statisticsSectionHeader: some View {
+        HStack(spacing: 6) {
+            Text("Statistics".localized)
+            Spacer()
+        }
+    }
+    
+    var learningSectionHeader: some View {
+        HStack(spacing: 6) {
+            Text("Learning Settings".localized)
+            Spacer()
+        }
+    }
+
+    var resetSectionHeader: some View {
+        HStack(spacing: 6) {
+            Text("Default Settings".localized)
+            Spacer()
+        }
+    }
+    
+    var body: some View {
+        VStack {
+            Text("").frame(height: 0)
+            List {
+
+                Section(header: statisticsSectionHeader
+                    ) {
+                        NavigationLink(destination: StatisticsView()) {
+                            Text("View Statistics".localized)
+                        }
+                    }
+                
+                Section(header: Text("Intro Screens".localized)) {
+                    NavigationLink(destination: LandingView(showOnboarding: $showOnboarding)) {
+                        HStack {
+                            Text("About".localized)
+                            Spacer()
+                        }
+                    }
+                }
+                
+
+                
+                Section(header: learningSectionHeader) {
+                    Picker("Difficulty Level".localized, selection: $settings.difficultyLevel) {
+                        ForEach(DifficultyLevel.allCases, id: \.self) { level in
+                            Text(level.localizedName).tag(level.rawValue)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    
+                    HStack(alignment: .center) {
+                        Text("Task Count".localized)
+                            .padding(.trailing, 10)
+                        
+                        let step: Double = 15
+                        let range = 30.0...90.0
+                        Slider(
+                            value: Binding<Double>(
+                                get: { Double(settings.exampleCount) },
+                                set: { newValue in
+                                    let snapped = (newValue / step).rounded() * step
+                                    let clamped = min(max(snapped, range.lowerBound), range.upperBound)
+                                    settings.exampleCount = Int(clamped)
+                                }
+                            ),
+                            in: range,
+                            step: step
+                        )
+                        
+                        Text("\(settings.exampleCount)")
+                            .monospacedDigit()
+                            .frame(width: 36, alignment: .trailing)
+                    }.padding(.trailing, 8)
+                    
+                    
+                    Toggle("Display Timer".localized, isOn: settings.$isTimerOn)
+                        .tint(Color(uiColor: .systemBlue))
+                    
+                    Toggle("24h format".localized, isOn: settings.$is24HourClock)
+                        .tint(Color(uiColor: .systemBlue))
+                    
+
+                }
+                
+                Section(header: Text("Appearance".localized)) {
+                    Picker("Theme".localized, selection: Binding(
+                        get: { settings.isDarkMode ? 1 : 0 },
+                        set: { settings.isDarkMode = $0 == 1 }
+                    )) {
+                        Text("Light".localized).tag(0)
+                        Text("Dark".localized).tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Section(header: Text("Language".localized)) {
+                    NavigationLink(destination: EmptyView()) {
+                        HStack {
+                            Text("App Language".localized)
+                            Spacer()
+                            Text(settings.primaryLanguage.displayName)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            settings.openAppLanguageSettings()
+                        }
+                    }
+                    
+                    
+                }
+                
+                Section(header: Text("Let Us Know What You Think".localized)) {
+                    Button("Share Feedback".localized) {
+                        showMailComposer = true
+                    }
+                }
+                
+                Section(header: resetSectionHeader) {
+                    Button("Reset Settings".localized) {
+                        settings.resetSettings()
+                    }
+                }
+
+            }
+        }
+        .navigationTitle("Settings".localized)
+        .alert("Are you sure you want to delete the application cache and close the app?".localized, isPresented: $showCacheAlert) {
+            Button("Delete".localized, role: .destructive) {
+                settings.clearUserDefaultsAndCloseApp()
+            }
+            Button("Cancel".localized, role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.".localized)
+        }
+        .sheet(isPresented: $showMailComposer) {
+            GeometryReader { geo in
+                if MFMailComposeViewController.canSendMail() {
+                    MailComposer(
+                        isPresented: $showMailComposer,
+                        screenshot: nil,
+                        recipient: "nordic.apps.feedback@gmail.com",
+                        subject: "The Clock School Feedback",
+                        screenSize: geo.size
+                    )
+                } else {
+                    Text("Please configure Mail to send feedback.".localized)
+                }
+            }
+        }
+        .background( GradientBackground().ignoresSafeArea().opacity(settings.isDarkMode ? 1.0 : 0.0))
+        .scrollContentBackground(settings.isDarkMode ? .hidden : .visible)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                ShareLink(
+                    item: URL(string: "https://apps.apple.com/app/6760045366")!,
+                    subject: Text("The Clock School".localized),
+                    message: Text("Check out The Clock School - a great clock learning app!".localized)
+                ) {
+                    Image(systemName: "square.and.arrow.up")
+                        .accessibilityLabel("Share".localized)
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+import SwiftUI
+
+struct StatisticsView: View {
+    @EnvironmentObject var settings: SettingsManager
+    @State private var showingClearConfirmation = false
+    
+    var body: some View {
+        VStack {
+            Text("").frame(height: 0)
+            List {
+                Section(header: sectionHeader("Easy".localized)) {
+                    columnHeaders()
+                    resultsSection(for: .easy)
+                }
+                
+                Section(header: sectionHeader("Medium".localized)) {
+                    columnHeaders()
+                    resultsSection(for: .medium)
+                }
+                
+                Section(header: sectionHeader("Hard".localized)) {
+                    columnHeaders()
+                    resultsSection(for: .hard)
+                }
+                
+
+            }
+            .navigationTitle("Statistics".localized)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingClearConfirmation = true }) {
+                        Image(systemName: "trash")
+                            .foregroundColor(.red)
+                    }
+                }
+            }
+            .alert("Clear All Statistics?".localized, isPresented: $showingClearConfirmation) {
+                Button("Clear".localized, role: .destructive) {
+                    settings.clearStatistics()
+                }
+                Button("Cancel".localized, role: .cancel) {}
+            } message: {
+                Text("This will permanently delete all saved results.".localized)
+            }
+        }
+    }
+    
+    private func columnHeaders() -> some View {
+        HStack(spacing: 4) {
+            Text("Name".localized)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                .font(Font.system(size: 13).bold())
+                .foregroundColor(.primary)
+            
+            Text("Count".localized)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                .font(Font.system(size: 13).bold())
+                .foregroundColor(.primary)
+            
+            Text("Format".localized)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                .font(Font.system(size: 13).bold())
+                .foregroundColor(.primary)
+            
+            Text("Result".localized)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                .font(Font.system(size: 13).bold())
+                .foregroundColor(.primary)
+            
+            Text("Date".localized)
+                .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                .font(Font.system(size: 13).bold())
+                .foregroundColor(.primary)
+        }
+        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+    
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.headline)
+            .foregroundColor(.primary)
+            .padding(.vertical, 8)
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+    }
+    
+    private func resultsSection(for difficulty: DifficultyLevel) -> some View {
+        let results = settings.loadGameResults()
+            .filter { $0.difficulty == difficulty }
+            .sorted { $0.time < $1.time }
+            .sorted { $0.is24HourClock && !$1.is24HourClock }
+            .sorted { $0.exampleCount > $1.exampleCount }
+                
+        return Group {
+            if results.isEmpty {
+                Text("No results yet".localized)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                    .padding(.vertical, 8)
+            } else {
+                ForEach(results) { result in
+                    HStack(spacing: 4) {
+                        Text(result.name)
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .font(.subheadline)
+                        
+                        Text("\(result.exampleCount)")
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                            .font(.system(size: 13, design: .monospaced))
+                        
+                        Text(result.is24HourClock ? "24h" : "12h")
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                            .font(.system(size: 13, design: .monospaced))
+                        
+                        Text(result.time.formattedTime)
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                            .font(.system(size: 15, design: .monospaced))
+                        
+                        Text(formatDate(result.date))
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .center)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+}
+
