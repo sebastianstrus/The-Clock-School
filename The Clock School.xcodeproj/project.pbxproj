@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		7D22E4922F47C14A005209EA /* Learn The Clock!.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Learn The Clock!.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D22E4922F47C14A005209EA /* The Clock School.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Clock School.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		7D22E4942F47C14A005209EA /* Learn The Clock! */ = {
+		7D22E4942F47C14A005209EA /* The Clock School */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Learn The Clock!";
+			path = "The Clock School";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		7D22E4892F47C14A005209EA = {
 			isa = PBXGroup;
 			children = (
-				7D22E4942F47C14A005209EA /* Learn The Clock! */,
+				7D22E4942F47C14A005209EA /* The Clock School */,
 				7D22E4932F47C14A005209EA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +40,7 @@
 		7D22E4932F47C14A005209EA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7D22E4922F47C14A005209EA /* Learn The Clock!.app */,
+				7D22E4922F47C14A005209EA /* The Clock School.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +48,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		7D22E4912F47C14A005209EA /* Learn The Clock! */ = {
+		7D22E4912F47C14A005209EA /* The Clock School */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7D22E49D2F47C14C005209EA /* Build configuration list for PBXNativeTarget "Learn The Clock!" */;
+			buildConfigurationList = 7D22E49D2F47C14C005209EA /* Build configuration list for PBXNativeTarget "The Clock School" */;
 			buildPhases = (
 				7D22E48E2F47C14A005209EA /* Sources */,
 				7D22E48F2F47C14A005209EA /* Frameworks */,
@@ -61,13 +61,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				7D22E4942F47C14A005209EA /* Learn The Clock! */,
+				7D22E4942F47C14A005209EA /* The Clock School */,
 			);
-			name = "Learn The Clock!";
+			name = "The Clock School";
 			packageProductDependencies = (
 			);
 			productName = "Learn The Clock!";
-			productReference = 7D22E4922F47C14A005209EA /* Learn The Clock!.app */;
+			productReference = 7D22E4922F47C14A005209EA /* The Clock School.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -78,14 +78,14 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2630;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					7D22E4912F47C14A005209EA = {
 						CreatedOnToolsVersion = 26.3;
 					};
 				};
 			};
-			buildConfigurationList = 7D22E48D2F47C14A005209EA /* Build configuration list for PBXProject "Learn the Clock!" */;
+			buildConfigurationList = 7D22E48D2F47C14A005209EA /* Build configuration list for PBXProject "The Clock School" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -109,7 +109,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7D22E4912F47C14A005209EA /* Learn The Clock! */,
+				7D22E4912F47C14A005209EA /* The Clock School */,
 			);
 		};
 /* End PBXProject section */
@@ -140,6 +140,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -194,6 +195,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -205,6 +207,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -252,6 +255,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
@@ -268,7 +272,7 @@
 				DEVELOPMENT_TEAM = 4SL936GBZY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Learn The Clock!";
+				INFOPLIST_KEY_CFBundleDisplayName = "The Clock School";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -302,7 +306,7 @@
 				DEVELOPMENT_TEAM = 4SL936GBZY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Learn The Clock!";
+				INFOPLIST_KEY_CFBundleDisplayName = "The Clock School";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -329,7 +333,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7D22E48D2F47C14A005209EA /* Build configuration list for PBXProject "Learn the Clock!" */ = {
+		7D22E48D2F47C14A005209EA /* Build configuration list for PBXProject "The Clock School" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7D22E49B2F47C14C005209EA /* Debug */,
@@ -338,7 +342,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7D22E49D2F47C14C005209EA /* Build configuration list for PBXNativeTarget "Learn The Clock!" */ = {
+		7D22E49D2F47C14C005209EA /* Build configuration list for PBXNativeTarget "The Clock School" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7D22E49E2F47C14C005209EA /* Debug */,
