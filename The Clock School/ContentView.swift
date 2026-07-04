@@ -138,15 +138,18 @@ enum TaskCategory: Int, CaseIterable, Identifiable {
 struct TaskCategoryGridView: View {
 
     @EnvironmentObject var settings: SettingsManager
+    @State private var appeared = false
 
     private var dark: Bool { settings.isDarkMode }
     private var ds:   DS   { DS(dark: dark) }
 
     private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14)
     ]
+
+    private let difficulties: [DifficultyLevel] = [.easy, .medium, .hard]
 
     var body: some View {
         ZStack {
@@ -175,18 +178,33 @@ struct TaskCategoryGridView: View {
             }
 
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 12) {
-                    ForEach(TaskCategory.allCases) { category in
-                        NavigationLink(destination: ClockGridView(
-                            settings: settings,
-                            category: category
-                        )) {
-                            categoryCard(category)
+                VStack(spacing: 22) {
+                    ForEach(Array(difficulties.enumerated()), id: \.element) { sectionIndex, level in
+                        VStack(alignment: .leading, spacing: 12) {
+                            difficultyHeader(level)
+                            LazyVGrid(columns: columns, spacing: 14) {
+                                ForEach(Array(TaskCategory.allCases.filter { $0.difficulty == level }.enumerated()), id: \.element.id) { index, category in
+                                    NavigationLink(destination: ClockGridView(
+                                        settings: settings,
+                                        category: category
+                                    )) {
+                                        categoryCard(category)
+                                            .scaleEffect(appeared ? 1.0 : 0.6)
+                                            .opacity(appeared ? 1.0 : 0.0)
+                                            .animation(
+                                                .spring(response: 0.55, dampingFraction: 0.65)
+                                                .delay(Double(sectionIndex) * 0.08 + Double(index) * 0.05),
+                                                value: appeared
+                                            )
+                                    }
+                                    .buttonStyle(BouncyButtonStyle())
+                                }
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
         }
         .environment(\.isDarkMode, dark)
@@ -200,6 +218,40 @@ struct TaskCategoryGridView: View {
         }
         .toolbarBackground(dark ? Color(hex: "#12122A") : .clear, for: .navigationBar)
         .toolbarBackground(dark ? .visible : .automatic, for: .navigationBar)
+        .onAppear { appeared = true }
+    }
+
+    private func difficultyHeader(_ level: DifficultyLevel) -> some View {
+        let color = difficultyColor(level)
+        let stars = starCount(level)
+        return HStack(spacing: 10) {
+            HStack(spacing: 3) {
+                ForEach(0..<3, id: \.self) { i in
+                    Image(systemName: i < stars ? "star.fill" : "star")
+                        .font(.system(size: 15, weight: .black))
+                        .foregroundStyle(
+                            i < stars
+                            ? LinearGradient(colors: [color, color.opacity(0.75)], startPoint: .top, endPoint: .bottom)
+                            : LinearGradient(colors: [color.opacity(0.28), color.opacity(0.28)], startPoint: .top, endPoint: .bottom)
+                        )
+                        .shadow(color: i < stars ? color.opacity(0.5) : .clear, radius: 3, x: 0, y: 1)
+                }
+            }
+            Text(level.localizedName)
+                .font(.system(size: 20, weight: .heavy, design: .rounded))
+                .foregroundColor(dark ? Color(hex: "#E8E8F0") : Color(hex: "#1A1A2E"))
+            Spacer()
+        }
+        .padding(.horizontal, 6)
+        .padding(.top, 4)
+    }
+
+    private func starCount(_ level: DifficultyLevel) -> Int {
+        switch level {
+        case .easy:   return 1
+        case .medium: return 2
+        case .hard:   return 3
+        }
     }
 
     private func categoryCard(_ category: TaskCategory) -> some View {
@@ -207,56 +259,119 @@ struct TaskCategoryGridView: View {
         let progress = settings.progress(forCategory: category.rawValue)
         let total = SettingsManager.tasksPerCategory
         let isComplete = progress >= total
+        let progressFraction = min(1.0, CGFloat(progress) / CGFloat(total))
 
         return VStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(accent.opacity(dark ? 0.22 : 0.14))
-                    .frame(width: 52, height: 52)
+                    .fill(
+                        LinearGradient(
+                            colors: [accent, accent.opacity(0.72)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 58, height: 58)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(Color.white.opacity(0.5), lineWidth: 2)
+                    )
+                    .overlay(
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.35), Color.white.opacity(0.0)],
+                                    startPoint: .top,
+                                    endPoint: .center
+                                )
+                            )
+                    )
+                    .shadow(color: accent.opacity(0.5), radius: 8, x: 0, y: 4)
+
                 Image(systemName: category.typeIcon)
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundColor(accent)
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(.white)
+                    .shadow(color: Color.black.opacity(0.15), radius: 2, x: 0, y: 1)
             }
+            .padding(.top, 4)
 
             Text(category.typeTitle)
-                .font(ds.display(15))
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
                 .foregroundColor(ds.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
 
-            Text(category.difficulty.localizedName)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundColor(accent)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(
-                    Capsule()
-                        .fill(accent.opacity(dark ? 0.22 : 0.14))
-                        .overlay(Capsule().strokeBorder(accent.opacity(0.3), lineWidth: 1))
-                )
+            VStack(spacing: 4) {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(accent.opacity(dark ? 0.18 : 0.14))
+                            .frame(height: 8)
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [accent, accent.opacity(0.72)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(8, geo.size.width * progressFraction), height: 8)
+                            .overlay(
+                                Capsule()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(0.35), Color.white.opacity(0.0)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                            )
+                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: progressFraction)
+                    }
+                }
+                .frame(height: 8)
 
-            Text("\(min(progress, total))/\(total)")
-                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundColor(ds.textSecondary)
+                Text("\(min(progress, total))/\(total)")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(accent)
+            }
+            .padding(.horizontal, 4)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
-        .padding(.horizontal, 6)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 8)
         .background(
-            RoundedRectangle(cornerRadius: ds.radiusCard)
+            RoundedRectangle(cornerRadius: 22)
                 .fill(ds.surface)
-                .shadow(color: dark ? Color.black.opacity(0.4) : Color(hex: "#1A1A2E").opacity(0.08), radius: 10, x: 0, y: 4)
+                .shadow(color: dark ? Color.black.opacity(0.45) : Color(hex: "#1A1A2E").opacity(0.12), radius: 10, x: 0, y: 5)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: ds.radiusCard)
-                .strokeBorder(isComplete ? ds.success : ds.border, lineWidth: isComplete ? 2 : 1)
+            RoundedRectangle(cornerRadius: 22)
+                .strokeBorder(
+                    isComplete ? ds.success : accent.opacity(dark ? 0.35 : 0.22),
+                    lineWidth: isComplete ? 3 : 1.5
+                )
         )
         .overlay(alignment: .topTrailing) {
             if isComplete {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white, ds.success)
-                    .padding(8)
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: "#FFD84A"), Color(hex: "#F59E0B")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 28, height: 28)
+                        .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
+                        .shadow(color: Color(hex: "#F59E0B").opacity(0.6), radius: 5, x: 0, y: 2)
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 13, weight: .black))
+                        .foregroundColor(.white)
+                }
+                .offset(x: 8, y: -8)
+                .transition(.scale.combined(with: .opacity))
             }
         }
     }
@@ -267,6 +382,15 @@ struct TaskCategoryGridView: View {
         case .medium: return Color(hex: "#F59E0B")
         case .hard:   return Color(hex: "#EF4444")
         }
+    }
+}
+
+// MARK: - Bouncy Button Style
+private struct BouncyButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 
