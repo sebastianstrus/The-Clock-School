@@ -109,11 +109,10 @@ class TransparentHostingController<Content: View>: UIHostingController<Content> 
         super.viewDidLoad()
         view.backgroundColor = .clear
         navigationItem.hidesBackButton = true
-    }
-    
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        view.backgroundColor = .clear
+
+        registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _: UITraitCollection) in
+            self.view.backgroundColor = .clear
+        }
     }
 }
 struct TransparentNavigationView<Content: View>: UIViewControllerRepresentable {
