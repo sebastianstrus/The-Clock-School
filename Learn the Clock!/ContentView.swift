@@ -87,6 +87,174 @@ extension Color {
     }
 }
 
+// MARK: - Task Category
+enum TaskCategory: Int, CaseIterable, Identifiable {
+    case testEasy = 0
+    case pickerEasy
+    case handsEasy
+    case testMedium
+    case pickerMedium
+    case handsMedium
+    case testHard
+    case pickerHard
+    case handsHard
+
+    var id: Int { rawValue }
+
+    var taskType: ClockTaskType {
+        switch self {
+        case .testEasy, .testMedium, .testHard:       return .multipleChoice
+        case .pickerEasy, .pickerMedium, .pickerHard: return .timePicker
+        case .handsEasy, .handsMedium, .handsHard:    return .interactiveHands
+        }
+    }
+
+    var difficulty: DifficultyLevel {
+        switch self {
+        case .testEasy, .pickerEasy, .handsEasy:       return .easy
+        case .testMedium, .pickerMedium, .handsMedium: return .medium
+        case .testHard, .pickerHard, .handsHard:       return .hard
+        }
+    }
+
+    var typeTitle: String {
+        switch taskType {
+        case .multipleChoice:   return "Test".localized
+        case .timePicker:       return "Picker".localized
+        case .interactiveHands: return "Hands".localized
+        }
+    }
+
+    var typeIcon: String {
+        switch taskType {
+        case .multipleChoice:   return "questionmark.circle.fill"
+        case .timePicker:       return "slider.horizontal.3"
+        case .interactiveHands: return "hand.draw.fill"
+        }
+    }
+}
+
+// MARK: - Task Category Grid View
+struct TaskCategoryGridView: View {
+
+    @EnvironmentObject var settings: SettingsManager
+
+    private var dark: Bool { settings.isDarkMode }
+    private var ds:   DS   { DS(dark: dark) }
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+
+    var body: some View {
+        ZStack {
+            if dark {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#0D0D1F"),
+                        Color(hex: "#12122A"),
+                        Color(hex: "#0A0A18")
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            } else {
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.72, green: 0.88, blue: 0.95),
+                        Color(red: 0.55, green: 0.78, blue: 0.90),
+                        Color(red: 0.40, green: 0.68, blue: 0.82)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            }
+
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(TaskCategory.allCases) { category in
+                        NavigationLink(destination: ClockGridView(
+                            settings: settings,
+                            taskType: category.taskType,
+                            difficulty: category.difficulty
+                        )) {
+                            categoryCard(category)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .environment(\.isDarkMode, dark)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Choose a Task".localized)
+                    .bold()
+                    .foregroundColor(dark ? Color(hex: "#E8E8F0") : .black)
+            }
+        }
+        .toolbarBackground(dark ? Color(hex: "#12122A") : .clear, for: .navigationBar)
+        .toolbarBackground(dark ? .visible : .automatic, for: .navigationBar)
+    }
+
+    private func categoryCard(_ category: TaskCategory) -> some View {
+        let accent = difficultyColor(category.difficulty)
+        return VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(accent.opacity(dark ? 0.22 : 0.14))
+                    .frame(width: 52, height: 52)
+                Image(systemName: category.typeIcon)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(accent)
+            }
+
+            Text(category.typeTitle)
+                .font(ds.display(15))
+                .foregroundColor(ds.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(category.difficulty.localizedName)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundColor(accent)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    Capsule()
+                        .fill(accent.opacity(dark ? 0.22 : 0.14))
+                        .overlay(Capsule().strokeBorder(accent.opacity(0.3), lineWidth: 1))
+                )
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 18)
+        .padding(.horizontal, 6)
+        .background(
+            RoundedRectangle(cornerRadius: ds.radiusCard)
+                .fill(ds.surface)
+                .shadow(color: dark ? Color.black.opacity(0.4) : Color(hex: "#1A1A2E").opacity(0.08), radius: 10, x: 0, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: ds.radiusCard)
+                .strokeBorder(ds.border, lineWidth: 1)
+        )
+    }
+
+    private func difficultyColor(_ difficulty: DifficultyLevel) -> Color {
+        switch difficulty {
+        case .easy:   return Color(hex: "#22C55E")
+        case .medium: return Color(hex: "#F59E0B")
+        case .hard:   return Color(hex: "#EF4444")
+        }
+    }
+}
+
 // MARK: - Clock Grid View
 struct ClockGridView: View {
 
@@ -96,13 +264,10 @@ struct ClockGridView: View {
     @State private var showCoins = false
     @State private var shouldShowNameAlert = false
     @State private var userName = ""
-    @State private var startTime: Date?
-    @State private var elapsedTime: TimeInterval = 0
-    @State private var timer: Timer?
     @State private var currentTaskIndex: Int = 0
 
-    init(settings: SettingsManager) {
-        _viewModel = StateObject(wrappedValue: ClockGameViewModel(settings: settings))
+    init(settings: SettingsManager, taskType: ClockTaskType, difficulty: DifficultyLevel) {
+        _viewModel = StateObject(wrappedValue: ClockGameViewModel(settings: settings, taskType: taskType, difficulty: difficulty))
     }
 
     private var dark: Bool { viewModel.settings.isDarkMode }
@@ -201,12 +366,10 @@ struct ClockGridView: View {
             viewModel.resetGame()
             currentTaskIndex = 0
             showCoins = false
-            startTimer()
         }
-        .onDisappear { stopTimer() }
         .animation(.spring(response: 0.4, dampingFraction: 0.75), value: showCoins)
         .animation(.easeInOut(duration: 0.3), value: currentTaskIndex)
-        .alert("Congratulations!".localized + "\n" + elapsedTime.formattedTime, isPresented: $shouldShowNameAlert) {
+        .alert("Congratulations!".localized, isPresented: $shouldShowNameAlert) {
             TextField("Nickname".localized, text: $userName)
             Button("Save".localized) { saveResultAndShowVictory() }
             Button("Skip".localized, role: .cancel) { }
@@ -215,7 +378,6 @@ struct ClockGridView: View {
         }
         .onChange(of: showCoins) {
             if showCoins {
-                stopTimer()
                 shouldShowNameAlert = true
             }
         }
@@ -230,15 +392,6 @@ struct ClockGridView: View {
                             .flipsForRightToLeftLayoutDirection(true)
                     }
                     .foregroundColor(ds.accent)
-                }
-            }
-            
-            if viewModel.settings.isTimerOn {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Text(elapsedTime.formattedTimeWithMilliseconds)
-                        .font(Font.system(size: UIDevice.current.userInterfaceIdiom == .pad ? 18 : 14, weight: .medium, design: .monospaced))
-                        .foregroundColor(viewModel.settings.isTimerOn ? ds.accent : .clear)
-                        .padding(.horizontal, 10)
                 }
             }
         }
@@ -257,23 +410,12 @@ struct ClockGridView: View {
         }
     }
 
-    private func startTimer() {
-        guard startTime == nil else { return }
-        startTime = Date()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            if let s = startTime { elapsedTime = Date().timeIntervalSince(s) }
-        }
-        RunLoop.current.add(timer!, forMode: .common)
-    }
-    private func stopTimer() { timer?.invalidate(); timer = nil }
-
     private func saveResultAndShowVictory() {
-        let difficulty = DifficultyLevel(rawValue: viewModel.settings.difficultyLevel) ?? .medium
         viewModel.settings.saveGameResult(
             name: userName.isEmpty ? "Anonymous" : userName,
-            difficulty: difficulty,
-            exampleCount: viewModel.settings.exampleCount,
-            time: elapsedTime,
+            difficulty: viewModel.difficulty,
+            exampleCount: viewModel.tasks.count,
+            time: 0,
             is24HourClock: viewModel.settings.is24HourClock
         )
     }
@@ -393,7 +535,7 @@ struct MultipleChoiceTaskView: View {
     private let optionLabels = ["A", "B", "C", "D", "E", "F"]
 
     private var difficulty: DifficultyLevel {
-        DifficultyLevel(rawValue: viewModel.settings.difficultyLevel) ?? .medium
+        viewModel.difficulty
     }
 
     var body: some View {
@@ -583,7 +725,7 @@ struct TimePickerTaskView: View {
     @State private var shakeTrigger: CGFloat = 0
 
     private var difficulty: DifficultyLevel {
-        DifficultyLevel(rawValue: viewModel.settings.difficultyLevel) ?? .medium
+        viewModel.difficulty
     }
 
     private var hourRange: [Int] {
@@ -921,7 +1063,7 @@ struct ClockTaskView: View {
     @State private var audioPlayer: AVAudioPlayer?
 
     private var difficulty: DifficultyLevel {
-        DifficultyLevel(rawValue: viewModel.settings.difficultyLevel) ?? .medium
+        viewModel.difficulty
     }
 
     var body: some View {

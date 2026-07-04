@@ -31,13 +31,19 @@ struct ClockTask: Identifiable {
 // MARK: - ViewModel
 final class ClockGameViewModel: ObservableObject {
 
+    static let tasksPerCategory: Int = 20
+
     @Published var tasks: [ClockTask] = []
     @Published var solvedTasks: [UUID: Bool] = [:]
 
     let settings: SettingsManager
+    let taskType: ClockTaskType
+    let difficulty: DifficultyLevel
 
-    init(settings: SettingsManager) {
+    init(settings: SettingsManager, taskType: ClockTaskType, difficulty: DifficultyLevel) {
         self.settings = settings
+        self.taskType = taskType
+        self.difficulty = difficulty
     }
 
     func markTaskSolved(_ task: ClockTask) {
@@ -54,24 +60,10 @@ final class ClockGameViewModel: ObservableObject {
 
     // MARK: - Task Generation
     func generateTasks() {
-        let count = settings.exampleCount
-        let difficulty = DifficultyLevel(rawValue: settings.difficultyLevel) ?? .medium
-        let third = count / 3
-
-        tasks = (0..<count).map { index in
-            let taskType: ClockTaskType
-            if index < third {
-                taskType = .multipleChoice
-            } else if index < third * 2 {
-                taskType = .timePicker
-            } else {
-                taskType = .interactiveHands
-            }
-            return makeTask(difficulty: difficulty, type: taskType)
-        }
+        tasks = (0..<Self.tasksPerCategory).map { _ in makeTask() }
     }
 
-    private func makeTask(difficulty: DifficultyLevel, type: ClockTaskType) -> ClockTask {
+    private func makeTask() -> ClockTask {
         let hour = settings.is24HourClock ? Int.random(in: 0...23) : Int.random(in: 1...12)
 
         let minute: Int
@@ -84,7 +76,7 @@ final class ClockGameViewModel: ObservableObject {
         var components = DateComponents()
         components.hour = hour
         components.minute = minute
-        return ClockTask(date: Calendar.current.date(from: components)!, type: type)
+        return ClockTask(date: Calendar.current.date(from: components)!, type: taskType)
     }
 
     func resetGame() {
@@ -94,7 +86,7 @@ final class ClockGameViewModel: ObservableObject {
     }
 
     func toleranceForDifficulty() -> (hour: Double, minute: Double) {
-        switch DifficultyLevel(rawValue: settings.difficultyLevel) ?? .easy {
+        switch difficulty {
         case .easy:   return (hour: 12.0, minute: 6.0)
         case .medium: return (hour: 6.0,  minute: 3.0)
         case .hard:   return (hour: 3.0,  minute: 1.5)
@@ -104,7 +96,6 @@ final class ClockGameViewModel: ObservableObject {
     // MARK: - Multiple Choice Options
     /// Returns 6 shuffled Date options where exactly one matches the task's time.
     func generateMultipleChoiceOptions(for task: ClockTask) -> [Date] {
-        let difficulty = DifficultyLevel(rawValue: settings.difficultyLevel) ?? .medium
         var options: [Date] = [task.date]
         let calendar = Calendar.current
         let correctComponents = calendar.dateComponents([.hour, .minute], from: task.date)

@@ -96,7 +96,6 @@ enum UserDefaultsKeys: String {
     case difficultyLevel
     case exampleCount
     case primaryLanguage = "AppleLanguages"
-    case isTimerOn
     case is24HourClock
 }
 
@@ -133,9 +132,7 @@ class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
     
     @AppStorage(UserDefaultsKeys.isDarkMode.rawValue) var isDarkMode: Bool = false
-    
-    @AppStorage(UserDefaultsKeys.isTimerOn.rawValue) var isTimerOn: Bool = true
-    
+
     @AppStorage(UserDefaultsKeys.is24HourClock.rawValue) var is24HourClock: Bool = true
     
     @AppStorage(UserDefaultsKeys.exampleCount.rawValue) var exampleCount: Int = 45
@@ -200,7 +197,6 @@ class SettingsManager: ObservableObject {
     func resetSettings() {
         exampleCount = 45
         isDarkMode = false
-        isTimerOn = true
         difficultyLevel = DifficultyLevel.medium.rawValue
     }
     

@@ -7,26 +7,17 @@
 
 
 import SwiftUI
-import MessageUI
 
 struct SettingsView: View {
-    
+
     @EnvironmentObject var settings: SettingsManager
     @Environment(\.colorScheme) var colorScheme
-    
+
     @State private var showProgressAlert = false
     @State private var showCacheAlert = false
-    @State private var showMailComposer = false
     @State private var showingLanguageHelp = false
     @State private var showOnboarding: Bool = false
-        
-    var statisticsSectionHeader: some View {
-        HStack(spacing: 6) {
-            Text("Statistics".localized)
-            Spacer()
-        }
-    }
-    
+
     var learningSectionHeader: some View {
         HStack(spacing: 6) {
             Text("Learning Settings".localized)
@@ -46,13 +37,6 @@ struct SettingsView: View {
             Text("").frame(height: 0)
             List {
 
-                Section(header: statisticsSectionHeader
-                    ) {
-                        NavigationLink(destination: StatisticsView()) {
-                            Text("View Statistics".localized)
-                        }
-                    }
-                
                 Section(header: Text("Intro Screens".localized)) {
                     NavigationLink(destination: LandingView(showOnboarding: $showOnboarding)) {
                         HStack {
@@ -65,45 +49,8 @@ struct SettingsView: View {
 
                 
                 Section(header: learningSectionHeader) {
-                    Picker("Difficulty Level".localized, selection: $settings.difficultyLevel) {
-                        ForEach(DifficultyLevel.allCases, id: \.self) { level in
-                            Text(level.localizedName).tag(level.rawValue)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    
-                    HStack(alignment: .center) {
-                        Text("Task Count".localized)
-                            .padding(.trailing, 10)
-                        
-                        let step: Double = 15
-                        let range = 30.0...90.0
-                        Slider(
-                            value: Binding<Double>(
-                                get: { Double(settings.exampleCount) },
-                                set: { newValue in
-                                    let snapped = (newValue / step).rounded() * step
-                                    let clamped = min(max(snapped, range.lowerBound), range.upperBound)
-                                    settings.exampleCount = Int(clamped)
-                                }
-                            ),
-                            in: range,
-                            step: step
-                        )
-                        
-                        Text("\(settings.exampleCount)")
-                            .monospacedDigit()
-                            .frame(width: 36, alignment: .trailing)
-                    }.padding(.trailing, 8)
-                    
-                    
-                    Toggle("Display Timer".localized, isOn: settings.$isTimerOn)
-                        .tint(Color(uiColor: .systemBlue))
-                    
                     Toggle("24h format".localized, isOn: settings.$is24HourClock)
                         .tint(Color(uiColor: .systemBlue))
-                    
-
                 }
                 
                 Section(header: Text("Appearance".localized)) {
@@ -133,12 +80,6 @@ struct SettingsView: View {
                     
                 }
                 
-                Section(header: Text("Let Us Know What You Think".localized)) {
-                    Button("Share Feedback".localized) {
-                        showMailComposer = true
-                    }
-                }
-                
                 Section(header: resetSectionHeader) {
                     Button("Reset Settings".localized) {
                         settings.resetSettings()
@@ -155,21 +96,6 @@ struct SettingsView: View {
             Button("Cancel".localized, role: .cancel) { }
         } message: {
             Text("This action cannot be undone.".localized)
-        }
-        .sheet(isPresented: $showMailComposer) {
-            GeometryReader { geo in
-                if MFMailComposeViewController.canSendMail() {
-                    MailComposer(
-                        isPresented: $showMailComposer,
-                        screenshot: nil,
-                        recipient: "nordic.apps.feedback@gmail.com",
-                        subject: "The Clock School Feedback",
-                        screenSize: geo.size
-                    )
-                } else {
-                    Text("Please configure Mail to send feedback.".localized)
-                }
-            }
         }
         .background( GradientBackground().ignoresSafeArea().opacity(settings.isDarkMode ? 1.0 : 0.0))
         .scrollContentBackground(settings.isDarkMode ? .hidden : .visible)
