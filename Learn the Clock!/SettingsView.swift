@@ -14,6 +14,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
 
     @State private var showProgressAlert = false
+    @State private var showResetProgressConfirm = false
     @State private var showCacheAlert = false
     @State private var showingLanguageHelp = false
     @State private var showOnboarding: Bool = false
@@ -80,6 +81,12 @@ struct SettingsView: View {
                     
                 }
                 
+                Section(header: Text("Progress".localized)) {
+                    Button("Reset Progress".localized, role: .destructive) {
+                        showResetProgressConfirm = true
+                    }
+                }
+
                 Section(header: resetSectionHeader) {
                     Button("Reset Settings".localized) {
                         settings.resetSettings()
@@ -89,6 +96,18 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings".localized)
+        .confirmationDialog(
+            "Reset all category progress?".localized,
+            isPresented: $showResetProgressConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Reset Progress".localized, role: .destructive) {
+                settings.resetCategoryProgress()
+            }
+            Button("Cancel".localized, role: .cancel) { }
+        } message: {
+            Text("This will clear your progress in all 9 task categories. This action cannot be undone.".localized)
+        }
         .alert("Are you sure you want to delete the application cache and close the app?".localized, isPresented: $showCacheAlert) {
             Button("Delete".localized, role: .destructive) {
                 settings.clearUserDefaultsAndCloseApp()

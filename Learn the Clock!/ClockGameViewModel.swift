@@ -31,19 +31,20 @@ struct ClockTask: Identifiable {
 // MARK: - ViewModel
 final class ClockGameViewModel: ObservableObject {
 
-    static let tasksPerCategory: Int = 20
+    static let tasksPerCategory: Int = SettingsManager.tasksPerCategory
 
     @Published var tasks: [ClockTask] = []
     @Published var solvedTasks: [UUID: Bool] = [:]
 
     let settings: SettingsManager
-    let taskType: ClockTaskType
-    let difficulty: DifficultyLevel
+    let category: TaskCategory
 
-    init(settings: SettingsManager, taskType: ClockTaskType, difficulty: DifficultyLevel) {
+    var taskType: ClockTaskType { category.taskType }
+    var difficulty: DifficultyLevel { category.difficulty }
+
+    init(settings: SettingsManager, category: TaskCategory) {
         self.settings = settings
-        self.taskType = taskType
-        self.difficulty = difficulty
+        self.category = category
     }
 
     func markTaskSolved(_ task: ClockTask) {

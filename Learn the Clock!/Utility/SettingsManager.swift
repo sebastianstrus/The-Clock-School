@@ -130,19 +130,23 @@ enum DifficultyLevel: Int, CaseIterable, Codable {
 
 class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
-    
+
+    static let categoryCount: Int = 9
+    static let tasksPerCategory: Int = 20
+
     @AppStorage(UserDefaultsKeys.isDarkMode.rawValue) var isDarkMode: Bool = false
 
     @AppStorage(UserDefaultsKeys.is24HourClock.rawValue) var is24HourClock: Bool = true
-    
+
     @AppStorage(UserDefaultsKeys.exampleCount.rawValue) var exampleCount: Int = 45
     @AppStorage(UserDefaultsKeys.difficultyLevel.rawValue) var difficultyLevel: Int = DifficultyLevel.medium.rawValue
-    
+
     @Published var primaryLanguage: Language
-    
-    
+    @Published private(set) var categoryProgress: [String: Int] = [:]
+
+    private let categoryProgressKey = "categoryProgress"
     private let userDefaults = UserDefaults.standard
-    
+
     private init() {
         if let appleLanguages = userDefaults.array(forKey: UserDefaultsKeys.primaryLanguage.rawValue),
            let _ = appleLanguages.first as? String,
@@ -151,6 +155,37 @@ class SettingsManager: ObservableObject {
         } else {
             primaryLanguage = .english
         }
+
+        if let stored = userDefaults.dictionary(forKey: categoryProgressKey) as? [String: Int] {
+            categoryProgress = stored
+        }
+    }
+
+    // MARK: - Category Progress
+
+    func progress(forCategory index: Int) -> Int {
+        categoryProgress[String(index)] ?? 0
+    }
+
+    func setProgress(_ count: Int, forCategory index: Int) {
+        let key = String(index)
+        let existing = categoryProgress[key] ?? 0
+        guard count > existing else { return }
+        categoryProgress[key] = min(count, Self.tasksPerCategory)
+        userDefaults.set(categoryProgress, forKey: categoryProgressKey)
+    }
+
+    func isCategoryComplete(_ index: Int) -> Bool {
+        progress(forCategory: index) >= Self.tasksPerCategory
+    }
+
+    var allCategoriesComplete: Bool {
+        (0..<Self.categoryCount).allSatisfy { isCategoryComplete($0) }
+    }
+
+    func resetCategoryProgress() {
+        categoryProgress = [:]
+        userDefaults.removeObject(forKey: categoryProgressKey)
     }
     
     private let statisticsKey = "gameStatistics"

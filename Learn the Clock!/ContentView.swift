@@ -179,8 +179,7 @@ struct TaskCategoryGridView: View {
                     ForEach(TaskCategory.allCases) { category in
                         NavigationLink(destination: ClockGridView(
                             settings: settings,
-                            taskType: category.taskType,
-                            difficulty: category.difficulty
+                            category: category
                         )) {
                             categoryCard(category)
                         }
@@ -205,6 +204,10 @@ struct TaskCategoryGridView: View {
 
     private func categoryCard(_ category: TaskCategory) -> some View {
         let accent = difficultyColor(category.difficulty)
+        let progress = settings.progress(forCategory: category.rawValue)
+        let total = SettingsManager.tasksPerCategory
+        let isComplete = progress >= total
+
         return VStack(spacing: 10) {
             ZStack {
                 Circle()
@@ -231,6 +234,10 @@ struct TaskCategoryGridView: View {
                         .fill(accent.opacity(dark ? 0.22 : 0.14))
                         .overlay(Capsule().strokeBorder(accent.opacity(0.3), lineWidth: 1))
                 )
+
+            Text("\(min(progress, total))/\(total)")
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundColor(ds.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
@@ -242,8 +249,16 @@ struct TaskCategoryGridView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: ds.radiusCard)
-                .strokeBorder(ds.border, lineWidth: 1)
+                .strokeBorder(isComplete ? ds.success : ds.border, lineWidth: isComplete ? 2 : 1)
         )
+        .overlay(alignment: .topTrailing) {
+            if isComplete {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.white, ds.success)
+                    .padding(8)
+            }
+        }
     }
 
     private func difficultyColor(_ difficulty: DifficultyLevel) -> Color {
@@ -266,8 +281,8 @@ struct ClockGridView: View {
     @State private var userName = ""
     @State private var currentTaskIndex: Int = 0
 
-    init(settings: SettingsManager, taskType: ClockTaskType, difficulty: DifficultyLevel) {
-        _viewModel = StateObject(wrappedValue: ClockGameViewModel(settings: settings, taskType: taskType, difficulty: difficulty))
+    init(settings: SettingsManager, category: TaskCategory) {
+        _viewModel = StateObject(wrappedValue: ClockGameViewModel(settings: settings, category: category))
     }
 
     private var dark: Bool { viewModel.settings.isDarkMode }
@@ -364,7 +379,8 @@ struct ClockGridView: View {
         .toolbarBackground(dark ? .visible : .automatic, for: .navigationBar)
         .onAppear {
             viewModel.resetGame()
-            currentTaskIndex = 0
+            let saved = viewModel.settings.progress(forCategory: viewModel.category.rawValue)
+            currentTaskIndex = saved >= viewModel.tasks.count ? 0 : saved
             showCoins = false
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.75), value: showCoins)
@@ -399,13 +415,19 @@ struct ClockGridView: View {
 
     private func handleTaskSolved() {
         let nextIndex = currentTaskIndex + 1
+        viewModel.settings.setProgress(nextIndex, forCategory: viewModel.category.rawValue)
+
         if nextIndex < viewModel.tasks.count {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
                 currentTaskIndex = nextIndex
             }
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
-                showCoins = true
+                if viewModel.settings.allCategoriesComplete {
+                    showCoins = true
+                } else {
+                    dismiss()
+                }
             }
         }
     }
