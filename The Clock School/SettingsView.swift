@@ -22,6 +22,14 @@ struct SettingsView: View {
     @State private var showPaywall = false
     @State private var showRestoreAlert = false
 
+    private var dark: Bool { settings.isDarkMode }
+
+    // Palette (matches TaskCategoryGridView / PaywallView)
+    private let goldGlow   = Color(hex: "#FFE9A8")
+    private let goldBright = Color(hex: "#F5D06F")
+    private let goldMain   = Color(hex: "#D4A64A")
+    private let goldDeep   = Color(hex: "#8F6B1A")
+
     var learningSectionHeader: some View {
         HStack(spacing: 6) {
             Text("Learning Settings".localized)
@@ -35,89 +43,117 @@ struct SettingsView: View {
             Spacer()
         }
     }
-    
+
     var body: some View {
-        VStack {
-            Text("").frame(height: 0)
+        ZStack {
+            premiumBackground.ignoresSafeArea()
+
             List {
+                Section {
+                    premiumBanner
+                        .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
 
                 Section(header: Text("Intro Screens".localized)) {
                     NavigationLink(destination: LandingView(showOnboarding: $showOnboarding)) {
-                        HStack {
-                            Text("About".localized)
-                            Spacer()
-                        }
+                        Label("About".localized, systemImage: "info.circle.fill")
                     }
                 }
-                
 
-                
                 Section(header: learningSectionHeader) {
-                    Toggle("24h format".localized, isOn: settings.$is24HourClock)
-                        .tint(Color(uiColor: .systemBlue))
-                }
-                
-                Section(header: Text("Appearance".localized)) {
-                    Picker("Theme".localized, selection: Binding(
-                        get: { settings.isDarkMode ? 1 : 0 },
-                        set: { settings.isDarkMode = $0 == 1 }
-                    )) {
-                        Text("Light".localized).tag(0)
-                        Text("Dark".localized).tag(1)
+                    Toggle(isOn: settings.$is24HourClock) {
+                        Label("24h format".localized, systemImage: "clock.fill")
                     }
-                    .pickerStyle(.segmented)
+                    .tint(goldMain)
                 }
-                
+
+                Section(header: Text("Appearance".localized)) {
+                    HStack {
+                        Label("Theme".localized, systemImage: "paintbrush.fill")
+                        Spacer()
+                        Picker("Theme".localized, selection: Binding(
+                            get: { settings.isDarkMode ? 1 : 0 },
+                            set: { settings.isDarkMode = $0 == 1 }
+                        )) {
+                            Text("Light".localized).tag(0)
+                            Text("Dark".localized).tag(1)
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 160)
+                    }
+                }
+
                 Section(header: Text("Language".localized)) {
                     NavigationLink(destination: EmptyView()) {
                         HStack {
-                            Text("App Language".localized)
+                            Label("App Language".localized, systemImage: "globe")
                             Spacer()
                             Text(settings.primaryLanguage.displayName)
+                                .foregroundColor(.secondary)
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
                             settings.openAppLanguageSettings()
                         }
                     }
-                    
-                    
                 }
-                
+
                 Section(header: Text("Premium".localized)) {
                     if store.isPremium {
                         HStack {
-                            Text("Lifetime Access".localized)
+                            Label("Lifetime Access".localized, systemImage: "crown.fill")
+                                .foregroundColor(goldDeep)
                             Spacer()
                             Image(systemName: "checkmark.seal.fill")
                                 .foregroundColor(.green)
                         }
                     } else {
-                        Button("Unlock Full Access".localized) {
+                        Button {
                             showPaywall = true
+                        } label: {
+                            Label("Unlock Full Access".localized, systemImage: "lock.open.fill")
                         }
                     }
-                    Button("Restore Purchases".localized) {
+                    Button {
                         Task {
                             await store.restore()
                             showRestoreAlert = true
                         }
+                    } label: {
+                        Label("Restore Purchases".localized, systemImage: "arrow.clockwise")
                     }
                 }
 
                 Section(header: Text("Progress".localized)) {
-                    Button("Reset Progress".localized, role: .destructive) {
+                    Button(role: .destructive) {
                         showResetProgressConfirm = true
+                    } label: {
+                        Label("Reset Progress".localized, systemImage: "arrow.counterclockwise")
                     }
                 }
 
                 Section(header: resetSectionHeader) {
-                    Button("Reset Settings".localized) {
+                    Button {
                         settings.resetSettings()
+                    } label: {
+                        Label("Reset Settings".localized, systemImage: "gearshape")
                     }
                 }
 
+                Section {
+                    Link(destination: URL(string: "https://sebastianstrus.com/documents/the-clock-school/privacy-policy.html")!) {
+                        HStack {
+                            Label("Privacy Policy".localized, systemImage: "hand.raised.fill")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle("Settings".localized)
         .confirmationDialog(
@@ -152,8 +188,6 @@ struct SettingsView: View {
                 .environmentObject(settings)
                 .environmentObject(store)
         }
-        .background( GradientBackground().ignoresSafeArea().opacity(settings.isDarkMode ? 1.0 : 0.0))
-        .scrollContentBackground(settings.isDarkMode ? .hidden : .visible)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 ShareLink(
@@ -164,6 +198,209 @@ struct SettingsView: View {
                     Image(systemName: "square.and.arrow.up")
                         .accessibilityLabel("Share".localized)
                 }
+            }
+        }
+    }
+
+    // MARK: - Premium Banner (top)
+
+    @ViewBuilder
+    private var premiumBanner: some View {
+        if store.isPremium {
+            premiumOwnedBanner
+        } else {
+            premiumCTA
+        }
+    }
+
+    private var premiumCTA: some View {
+        Button {
+            showPaywall = true
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [goldBright, goldMain],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 52, height: 52)
+                    Image(systemName: "crown.fill")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.white)
+                        .shadow(color: goldDeep.opacity(0.5), radius: 1, x: 0, y: 1)
+                }
+                .shadow(color: goldDeep.opacity(0.45), radius: 5, x: 0, y: 3)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Unlock Full Access".localized)
+                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .foregroundColor(dark ? Color(hex: "#F4EBD0") : Color(hex: "#2A2015"))
+                    Text("Lifetime · No Ads".localized)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(dark ? Color.white.opacity(0.7) : Color(hex: "#6B5230"))
+                }
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(goldDeep)
+            }
+            .padding(16)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: dark
+                                    ? [Color(hex: "#1B1728"), Color(hex: "#131022")]
+                                    : [Color(hex: "#FFFDF6"), Color(hex: "#FBF3DF")],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [goldGlow.opacity(dark ? 0.15 : 0.35), Color.clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
+                        )
+                }
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                goldGlow.opacity(dark ? 0.85 : 0.75),
+                                goldMain.opacity(0.55),
+                                goldDeep.opacity(0.60)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(color: dark ? .black.opacity(0.45) : goldDeep.opacity(0.20), radius: 10, x: 0, y: 5)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var premiumOwnedBanner: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "#22C55E"), Color(hex: "#16A34A")],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 52, height: 52)
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            .shadow(color: Color(hex: "#16A34A").opacity(0.45), radius: 5, x: 0, y: 3)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Lifetime Access".localized)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(dark ? Color(hex: "#F4EBD0") : Color(hex: "#2A2015"))
+                Text("Thank you for your support!".localized)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundColor(dark ? Color.white.opacity(0.7) : Color(hex: "#6B5230"))
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: dark
+                            ? [Color(hex: "#1B1728"), Color(hex: "#131022")]
+                            : [Color(hex: "#FFFDF6"), Color(hex: "#FBF3DF")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            goldGlow.opacity(dark ? 0.85 : 0.75),
+                            goldMain.opacity(0.55),
+                            goldDeep.opacity(0.60)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: dark ? .black.opacity(0.45) : goldDeep.opacity(0.20), radius: 10, x: 0, y: 5)
+    }
+
+    // MARK: - Background
+
+    private var premiumBackground: some View {
+        ZStack {
+            if dark {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#0E0918"),
+                        Color(hex: "#180F26"),
+                        Color(hex: "#0A0510")
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                RadialGradient(
+                    colors: [goldMain.opacity(0.20), .clear],
+                    center: UnitPoint(x: 0.12, y: 0.08),
+                    startRadius: 0,
+                    endRadius: 340
+                )
+                .blendMode(.plusLighter)
+                RadialGradient(
+                    colors: [goldDeep.opacity(0.26), .clear],
+                    center: UnitPoint(x: 0.9, y: 0.92),
+                    startRadius: 0,
+                    endRadius: 380
+                )
+                .blendMode(.plusLighter)
+            } else {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#F2E5BE"),
+                        Color(hex: "#E6D19B"),
+                        Color(hex: "#D6BB78")
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                RadialGradient(
+                    colors: [Color(hex: "#FFF3C8").opacity(0.85), .clear],
+                    center: UnitPoint(x: 0.18, y: 0.08),
+                    startRadius: 0,
+                    endRadius: 320
+                )
+                RadialGradient(
+                    colors: [Color(hex: "#C9A96E").opacity(0.35), .clear],
+                    center: UnitPoint(x: 0.88, y: 0.95),
+                    startRadius: 0,
+                    endRadius: 420
+                )
             }
         }
     }
