@@ -144,67 +144,46 @@ struct TaskCategoryGridView: View {
     private var ds:   DS   { DS(dark: dark) }
 
     private let columns = [
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14)
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
     ]
 
     private let difficulties: [DifficultyLevel] = [.easy, .medium, .hard]
 
     var body: some View {
         ZStack {
-            if dark {
-                LinearGradient(
-                    colors: [
-                        Color(hex: "#0D0D1F"),
-                        Color(hex: "#12122A"),
-                        Color(hex: "#0A0A18")
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+            premiumBackground
                 .ignoresSafeArea()
-            } else {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.72, green: 0.88, blue: 0.95),
-                        Color(red: 0.55, green: 0.78, blue: 0.90),
-                        Color(red: 0.40, green: 0.68, blue: 0.82)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            }
 
             ScrollView {
-                VStack(spacing: 22) {
+                VStack(spacing: 24) {
                     ForEach(Array(difficulties.enumerated()), id: \.element) { sectionIndex, level in
                         VStack(alignment: .leading, spacing: 12) {
-                            difficultyHeader(level)
-                            LazyVGrid(columns: columns, spacing: 14) {
-                                ForEach(Array(TaskCategory.allCases.filter { $0.difficulty == level }.enumerated()), id: \.element.id) { index, category in
+                            sectionHeader(level)
+                            LazyVGrid(columns: columns, spacing: 12) {
+                                ForEach(TaskCategory.allCases.filter { $0.difficulty == level }) { category in
                                     NavigationLink(destination: ClockGridView(
                                         settings: settings,
                                         category: category
                                     )) {
                                         categoryCard(category)
-                                            .scaleEffect(appeared ? 1.0 : 0.6)
-                                            .opacity(appeared ? 1.0 : 0.0)
-                                            .animation(
-                                                .spring(response: 0.55, dampingFraction: 0.65)
-                                                .delay(Double(sectionIndex) * 0.08 + Double(index) * 0.05),
-                                                value: appeared
-                                            )
                                     }
-                                    .buttonStyle(BouncyButtonStyle())
+                                    .buttonStyle(PressableCardStyle())
                                 }
                             }
                         }
+                        .opacity(appeared ? 1.0 : 0.0)
+                        .offset(y: appeared ? 0 : 10)
+                        .animation(
+                            .easeOut(duration: 0.45).delay(Double(sectionIndex) * 0.07),
+                            value: appeared
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 24)
             }
         }
         .environment(\.isDarkMode, dark)
@@ -212,38 +191,121 @@ struct TaskCategoryGridView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Choose a Task".localized)
-                    .bold()
-                    .foregroundColor(dark ? Color(hex: "#E8E8F0") : .black)
+                    .font(.system(size: 17, weight: .semibold, design: .serif))
+                    .tracking(0.4)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: dark
+                                ? [Color(hex: "#F5D06F"), Color(hex: "#D4A64A")]
+                                : [Color(hex: "#3A2A10"), Color(hex: "#5C4218")],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
             }
         }
-        .toolbarBackground(dark ? Color(hex: "#12122A") : .clear, for: .navigationBar)
-        .toolbarBackground(dark ? .visible : .automatic, for: .navigationBar)
+        .toolbarBackground(dark ? Color(hex: "#120A1E") : Color(hex: "#EFE1B4"), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .onAppear { appeared = true }
     }
 
-    private func difficultyHeader(_ level: DifficultyLevel) -> some View {
+    private var premiumBackground: some View {
+        ZStack {
+            if dark {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#0E0918"),
+                        Color(hex: "#180F26"),
+                        Color(hex: "#0A0510")
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                RadialGradient(
+                    colors: [Color(hex: "#D4A64A").opacity(0.22), Color.clear],
+                    center: UnitPoint(x: 0.12, y: 0.08),
+                    startRadius: 0,
+                    endRadius: 340
+                )
+                .blendMode(.plusLighter)
+
+                RadialGradient(
+                    colors: [Color(hex: "#8F6B1A").opacity(0.28), Color.clear],
+                    center: UnitPoint(x: 0.9, y: 0.92),
+                    startRadius: 0,
+                    endRadius: 380
+                )
+                .blendMode(.plusLighter)
+
+                RadialGradient(
+                    colors: [Color.clear, Color.black.opacity(0.45)],
+                    center: .center,
+                    startRadius: 220,
+                    endRadius: 700
+                )
+            } else {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "#F2E5BE"),
+                        Color(hex: "#E6D19B"),
+                        Color(hex: "#D6BB78")
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                RadialGradient(
+                    colors: [Color(hex: "#FFF3C8").opacity(0.85), Color.clear],
+                    center: UnitPoint(x: 0.18, y: 0.08),
+                    startRadius: 0,
+                    endRadius: 320
+                )
+
+                RadialGradient(
+                    colors: [Color(hex: "#C9A96E").opacity(0.35), Color.clear],
+                    center: UnitPoint(x: 0.88, y: 0.95),
+                    startRadius: 0,
+                    endRadius: 420
+                )
+
+                LinearGradient(
+                    colors: [Color.clear, Color(hex: "#6B4E10").opacity(0.18)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+            }
+        }
+    }
+
+    private func sectionHeader(_ level: DifficultyLevel) -> some View {
         let color = difficultyColor(level)
         let stars = starCount(level)
         return HStack(spacing: 10) {
-            HStack(spacing: 3) {
+            Text(level.localizedName.uppercased())
+                .font(.system(size: 12, weight: .bold, design: .serif))
+                .tracking(2.0)
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: dark
+                            ? [Color(hex: "#F5D06F"), Color(hex: "#D4A64A")]
+                            : [Color(hex: "#4A3618"), Color(hex: "#6B4E20")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+            HStack(spacing: 4) {
                 ForEach(0..<3, id: \.self) { i in
-                    Image(systemName: i < stars ? "star.fill" : "star")
-                        .font(.system(size: 15, weight: .black))
-                        .foregroundStyle(
-                            i < stars
-                            ? LinearGradient(colors: [color, color.opacity(0.75)], startPoint: .top, endPoint: .bottom)
-                            : LinearGradient(colors: [color.opacity(0.28), color.opacity(0.28)], startPoint: .top, endPoint: .bottom)
-                        )
-                        .shadow(color: i < stars ? color.opacity(0.5) : .clear, radius: 3, x: 0, y: 1)
+                    Circle()
+                        .fill(i < stars ? color : color.opacity(dark ? 0.22 : 0.20))
+                        .frame(width: 5, height: 5)
                 }
             }
-            Text(level.localizedName)
-                .font(.system(size: 20, weight: .heavy, design: .rounded))
-                .foregroundColor(dark ? Color(hex: "#E8E8F0") : Color(hex: "#1A1A2E"))
+
             Spacer()
         }
-        .padding(.horizontal, 6)
-        .padding(.top, 4)
+        .padding(.horizontal, 4)
     }
 
     private func starCount(_ level: DifficultyLevel) -> Int {
@@ -261,119 +323,235 @@ struct TaskCategoryGridView: View {
         let isComplete = progress >= total
         let progressFraction = min(1.0, CGFloat(progress) / CGFloat(total))
 
-        return VStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [accent, accent.opacity(0.72)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 58, height: 58)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(Color.white.opacity(0.5), lineWidth: 2)
-                    )
-                    .overlay(
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.35), Color.white.opacity(0.0)],
-                                    startPoint: .top,
-                                    endPoint: .center
-                                )
-                            )
-                    )
-                    .shadow(color: accent.opacity(0.5), radius: 8, x: 0, y: 4)
+        let goldGlow   = Color(hex: "#FFE9A8")
+        let goldBright = Color(hex: "#F5D06F")
+        let goldMain   = Color(hex: "#D4A64A")
+        let goldDeep   = Color(hex: "#8F6B1A")
 
-                Image(systemName: category.typeIcon)
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundColor(.white)
-                    .shadow(color: Color.black.opacity(0.15), radius: 2, x: 0, y: 1)
-            }
-            .padding(.top, 4)
+        let cardBase: [Color] = dark
+            ? [Color(hex: "#1B1728"), Color(hex: "#131022"), Color(hex: "#1F1930")]
+            : [Color(hex: "#FFFDF6"), Color(hex: "#FBF3DF"), Color(hex: "#F3E7C4")]
 
-            Text(category.typeTitle)
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                .foregroundColor(ds.textPrimary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+        let medallionInner: [Color] = dark
+            ? [Color(hex: "#1A1626"), Color(hex: "#0C0A18")]
+            : [Color(hex: "#2A2436"), Color(hex: "#150F20")]
 
-            VStack(spacing: 4) {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(accent.opacity(dark ? 0.18 : 0.14))
-                            .frame(height: 8)
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    colors: [accent, accent.opacity(0.72)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: max(8, geo.size.width * progressFraction), height: 8)
-                            .overlay(
-                                Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.white.opacity(0.35), Color.white.opacity(0.0)],
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                            )
-                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: progressFraction)
-                    }
-                }
-                .frame(height: 8)
-
-                Text("\(min(progress, total))/\(total)")
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundColor(accent)
-            }
-            .padding(.horizontal, 4)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .padding(.horizontal, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 22)
-                .fill(ds.surface)
-                .shadow(color: dark ? Color.black.opacity(0.45) : Color(hex: "#1A1A2E").opacity(0.12), radius: 10, x: 0, y: 5)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .strokeBorder(
-                    isComplete ? ds.success : accent.opacity(dark ? 0.35 : 0.22),
-                    lineWidth: isComplete ? 3 : 1.5
-                )
-        )
-        .overlay(alignment: .topTrailing) {
-            if isComplete {
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 0) {
                 ZStack {
                     Circle()
                         .fill(
+                            AngularGradient(
+                                colors: [goldBright, goldMain, goldDeep, goldMain, goldBright, goldGlow, goldBright],
+                                center: .center
+                            )
+                        )
+                    Circle()
+                        .fill(
                             LinearGradient(
-                                colors: [Color(hex: "#FFD84A"), Color(hex: "#F59E0B")],
+                                colors: medallionInner,
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 28, height: 28)
-                        .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
-                        .shadow(color: Color(hex: "#F59E0B").opacity(0.6), radius: 5, x: 0, y: 2)
-                    Image(systemName: "star.fill")
-                        .font(.system(size: 13, weight: .black))
-                        .foregroundColor(.white)
+                        .padding(2.2)
+                    Image(systemName: category.typeIcon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [goldGlow, goldMain],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: goldDeep.opacity(0.5), radius: 1, x: 0, y: 1)
                 }
-                .offset(x: 8, y: -8)
-                .transition(.scale.combined(with: .opacity))
+                .frame(width: 42, height: 42)
+                .shadow(color: goldDeep.opacity(dark ? 0.55 : 0.30), radius: 5, x: 0, y: 3)
+                .overlay(
+                    Circle()
+                        .fill(accent)
+                        .frame(width: 11, height: 11)
+                        .overlay(
+                            Circle()
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [goldGlow, goldMain],
+                                        startPoint: .top,
+                                        endPoint: .bottom
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: accent.opacity(0.6), radius: 3, x: 0, y: 1)
+                        .offset(x: 15, y: -14)
+                )
+
+                Spacer(minLength: 4)
+
+                if isComplete {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [goldBright, goldMain, goldDeep],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(color: goldMain.opacity(0.55), radius: 4, x: 0, y: 2)
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(category.typeTitle)
+                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: dark
+                                ? [Color(hex: "#F4EBD0"), Color(hex: "#D8CBA4")]
+                                : [Color(hex: "#2A2015"), Color(hex: "#4A3820")],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .tracking(0.3)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Text("\(min(progress, total))/\(total)")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(dark ? goldMain.opacity(0.85) : goldDeep.opacity(0.85))
+                    .tracking(0.8)
+                    .monospacedDigit()
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: dark
+                                    ? [Color(hex: "#0F0C1A"), Color(hex: "#1A1524")]
+                                    : [Color(hex: "#E4D9BB"), Color(hex: "#F2E7C7")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(height: 6)
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(goldDeep.opacity(dark ? 0.45 : 0.22), lineWidth: 0.5)
+                        )
+
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [goldDeep, goldMain, goldBright, goldGlow, goldBright, goldMain, goldDeep],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .overlay(
+                            Capsule()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [Color.white.opacity(0.55), Color.clear],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    )
+                                )
+                        )
+                        .frame(width: max(6, geo.size.width * progressFraction), height: 6)
+                        .shadow(color: goldMain.opacity(0.6), radius: 4, x: 0, y: 1)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progressFraction)
+                }
+            }
+            .frame(height: 6)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: cardBase,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                goldGlow.opacity(dark ? 0.10 : 0.28),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+
+                GeometryReader { geo in
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [goldBright.opacity(dark ? 0.22 : 0.32), Color.clear],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: 60
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+                        .offset(x: geo.size.width - 60, y: -60)
+                        .blendMode(dark ? .plusLighter : .normal)
+                }
+
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.clear, Color.black.opacity(dark ? 0.22 : 0.05)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [
+                            goldGlow.opacity(dark ? 0.85 : 0.75),
+                            goldMain.opacity(dark ? 0.55 : 0.55),
+                            goldDeep.opacity(dark ? 0.70 : 0.60),
+                            goldBright.opacity(dark ? 0.55 : 0.50)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .inset(by: 1.5)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [Color.white.opacity(dark ? 0.05 : 0.35), Color.clear],
+                        startPoint: .top,
+                        endPoint: .center
+                    ),
+                    lineWidth: 0.5
+                )
+        )
+        .shadow(color: dark ? Color.black.opacity(0.60) : goldDeep.opacity(0.20), radius: 14, x: 0, y: 7)
+        .shadow(color: dark ? Color.black.opacity(0.35) : Color(hex: "#2A1F10").opacity(0.10), radius: 3, x: 0, y: 1)
+        .shadow(color: goldMain.opacity(dark ? 0.15 : 0.10), radius: 22, x: 0, y: 0)
     }
 
     private func difficultyColor(_ difficulty: DifficultyLevel) -> Color {
@@ -385,12 +563,13 @@ struct TaskCategoryGridView: View {
     }
 }
 
-// MARK: - Bouncy Button Style
-private struct BouncyButtonStyle: ButtonStyle {
+// MARK: - Pressable Card Style
+private struct PressableCardStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
