@@ -138,16 +138,23 @@ enum TaskCategory: Int, CaseIterable, Identifiable {
 struct TaskCategoryGridView: View {
 
     @EnvironmentObject var settings: SettingsManager
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var appeared = false
 
     private var dark: Bool { settings.isDarkMode }
     private var ds:   DS   { DS(dark: dark) }
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
-    ]
+    private var isPad: Bool { horizontalSizeClass == .regular }
+
+    private var columnSpacing: CGFloat { isPad ? 20 : 12 }
+
+    private var columns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: columnSpacing),
+            GridItem(.flexible(), spacing: columnSpacing),
+            GridItem(.flexible(), spacing: columnSpacing)
+        ]
+    }
 
     private let difficulties: [DifficultyLevel] = [.easy, .medium, .hard]
 
@@ -157,11 +164,11 @@ struct TaskCategoryGridView: View {
                 .ignoresSafeArea()
 
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: isPad ? 32 : 24) {
                     ForEach(Array(difficulties.enumerated()), id: \.element) { sectionIndex, level in
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: isPad ? 18 : 12) {
                             sectionHeader(level)
-                            LazyVGrid(columns: columns, spacing: 12) {
+                            LazyVGrid(columns: columns, spacing: columnSpacing) {
                                 ForEach(TaskCategory.allCases.filter { $0.difficulty == level }) { category in
                                     NavigationLink(destination: ClockGridView(
                                         settings: settings,
@@ -181,9 +188,11 @@ struct TaskCategoryGridView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
+                .frame(maxWidth: isPad ? 900 : .infinity)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, isPad ? 24 : 16)
+                .padding(.top, isPad ? 16 : 10)
+                .padding(.bottom, isPad ? 32 : 24)
             }
         }
         .environment(\.isDarkMode, dark)
@@ -281,9 +290,10 @@ struct TaskCategoryGridView: View {
     private func sectionHeader(_ level: DifficultyLevel) -> some View {
         let color = difficultyColor(level)
         let stars = starCount(level)
-        return HStack(spacing: 10) {
+        let dotSize: CGFloat = isPad ? 8 : 5
+        return HStack(spacing: isPad ? 14 : 10) {
             Text(level.localizedName.uppercased())
-                .font(.system(size: 12, weight: .bold, design: .serif))
+                .font(.system(size: isPad ? 16 : 12, weight: .bold, design: .serif))
                 .tracking(2.0)
                 .foregroundStyle(
                     LinearGradient(
@@ -295,11 +305,11 @@ struct TaskCategoryGridView: View {
                     )
                 )
 
-            HStack(spacing: 4) {
+            HStack(spacing: isPad ? 6 : 4) {
                 ForEach(0..<3, id: \.self) { i in
                     Circle()
                         .fill(i < stars ? color : color.opacity(dark ? 0.22 : 0.20))
-                        .frame(width: 5, height: 5)
+                        .frame(width: dotSize, height: dotSize)
                 }
             }
 
@@ -336,7 +346,18 @@ struct TaskCategoryGridView: View {
             ? [Color(hex: "#1A1626"), Color(hex: "#0C0A18")]
             : [Color(hex: "#2A2436"), Color(hex: "#150F20")]
 
-        return VStack(alignment: .leading, spacing: 14) {
+        let medallionSize: CGFloat = isPad ? 64 : 42
+        let iconSize: CGFloat = isPad ? 24 : 16
+        let accentDotSize: CGFloat = isPad ? 16 : 11
+        let accentDotOffset = CGSize(width: isPad ? 22 : 15, height: isPad ? -20 : -14)
+        let checkmarkSize: CGFloat = isPad ? 28 : 20
+        let titleSize: CGFloat = isPad ? 22 : 16
+        let progressTextSize: CGFloat = isPad ? 15 : 11
+        let progressBarHeight: CGFloat = isPad ? 9 : 6
+        let cardSpacing: CGFloat = isPad ? 20 : 14
+        let cardPadding: CGFloat = isPad ? 20 : 14
+
+        return VStack(alignment: .leading, spacing: cardSpacing) {
             HStack(alignment: .top, spacing: 0) {
                 ZStack {
                     Circle()
@@ -354,9 +375,9 @@ struct TaskCategoryGridView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .padding(2.2)
+                        .padding(isPad ? 3.2 : 2.2)
                     Image(systemName: category.typeIcon)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: iconSize, weight: .semibold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [goldGlow, goldMain],
@@ -366,12 +387,12 @@ struct TaskCategoryGridView: View {
                         )
                         .shadow(color: goldDeep.opacity(0.5), radius: 1, x: 0, y: 1)
                 }
-                .frame(width: 42, height: 42)
-                .shadow(color: goldDeep.opacity(dark ? 0.55 : 0.30), radius: 5, x: 0, y: 3)
+                .frame(width: medallionSize, height: medallionSize)
+                .shadow(color: goldDeep.opacity(dark ? 0.55 : 0.30), radius: isPad ? 7 : 5, x: 0, y: 3)
                 .overlay(
                     Circle()
                         .fill(accent)
-                        .frame(width: 11, height: 11)
+                        .frame(width: accentDotSize, height: accentDotSize)
                         .overlay(
                             Circle()
                                 .strokeBorder(
@@ -380,18 +401,18 @@ struct TaskCategoryGridView: View {
                                         startPoint: .top,
                                         endPoint: .bottom
                                     ),
-                                    lineWidth: 1
+                                    lineWidth: isPad ? 1.4 : 1
                                 )
                         )
                         .shadow(color: accent.opacity(0.6), radius: 3, x: 0, y: 1)
-                        .offset(x: 15, y: -14)
+                        .offset(x: accentDotOffset.width, y: accentDotOffset.height)
                 )
 
                 Spacer(minLength: 4)
 
                 if isComplete {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: checkmarkSize, weight: .semibold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [goldBright, goldMain, goldDeep],
@@ -404,9 +425,9 @@ struct TaskCategoryGridView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: isPad ? 5 : 3) {
                 Text(category.typeTitle)
-                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .font(.system(size: titleSize, weight: .semibold, design: .serif))
                     .foregroundStyle(
                         LinearGradient(
                             colors: dark
@@ -421,7 +442,7 @@ struct TaskCategoryGridView: View {
                     .minimumScaleFactor(0.8)
 
                 Text("\(min(progress, total))/\(total)")
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .font(.system(size: progressTextSize, weight: .medium, design: .monospaced))
                     .foregroundColor(dark ? goldMain.opacity(0.85) : goldDeep.opacity(0.85))
                     .tracking(0.8)
                     .monospacedDigit()
@@ -439,7 +460,7 @@ struct TaskCategoryGridView: View {
                                 endPoint: .bottom
                             )
                         )
-                        .frame(height: 6)
+                        .frame(height: progressBarHeight)
                         .overlay(
                             Capsule()
                                 .strokeBorder(goldDeep.opacity(dark ? 0.45 : 0.22), lineWidth: 0.5)
@@ -463,15 +484,15 @@ struct TaskCategoryGridView: View {
                                     )
                                 )
                         )
-                        .frame(width: max(6, geo.size.width * progressFraction), height: 6)
+                        .frame(width: max(progressBarHeight, geo.size.width * progressFraction), height: progressBarHeight)
                         .shadow(color: goldMain.opacity(0.6), radius: 4, x: 0, y: 1)
                         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: progressFraction)
                 }
             }
-            .frame(height: 6)
+            .frame(height: progressBarHeight)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(cardPadding)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -1327,8 +1348,8 @@ struct StaticClockView: View {
                 ForEach(0..<60) { tick in
                     let isHour    = tick % 5  == 0
                     let isQuarter = tick % 15 == 0
-                    let tickW: CGFloat = isQuarter ? 3.5 : isHour ? 2.5 : 1.2
-                    let tickH: CGFloat = isQuarter ? 16  : isHour ? 14  : 7
+                    let tickW: CGFloat = isQuarter ? size * 0.014 : isHour ? size * 0.010 : size * 0.0048
+                    let tickH: CGFloat = isQuarter ? size * 0.064  : isHour ? size * 0.056 : size * 0.028
                     let faceRadius     = center - size * 0.065
                     let tickCenterDist = faceRadius - tickH / 2
                     Rectangle()
@@ -1558,8 +1579,8 @@ struct AnalogClockView: View {
                 ForEach(0..<60) { tick in
                     let isHour    = tick % 5  == 0
                     let isQuarter = tick % 15 == 0
-                    let tickW: CGFloat = isQuarter ? 3.5 : isHour ? 2.5 : 1.2
-                    let tickH: CGFloat = isQuarter ? 16  : isHour ? 14  : 7
+                    let tickW: CGFloat = isQuarter ? size * 0.014 : isHour ? size * 0.010 : size * 0.0048
+                    let tickH: CGFloat = isQuarter ? size * 0.064  : isHour ? size * 0.056 : size * 0.028
                     let faceRadius     = center - size * 0.065
                     let tickCenterDist = faceRadius - tickH / 2
                     Rectangle()
