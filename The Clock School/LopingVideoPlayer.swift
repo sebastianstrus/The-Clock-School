@@ -29,6 +29,8 @@ struct iOSVideoPlayer: UIViewControllerRepresentable {
         controller.player = viewModel.player
         controller.showsPlaybackControls = false
         controller.videoGravity = .resizeAspectFill
+        controller.allowsPictureInPicturePlayback = false
+        controller.canStartPictureInPictureAutomaticallyFromInline = false
         return controller
     }
 
@@ -94,11 +96,23 @@ class VideoPlayerViewModel: ObservableObject {
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(pausePlayback),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
         #elseif os(macOS)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(resumePlayback),
             name: NSApplication.willBecomeActiveNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(pausePlayback),
+            name: NSApplication.didResignActiveNotification,
             object: nil
         )
         #endif
@@ -120,6 +134,10 @@ class VideoPlayerViewModel: ObservableObject {
             print("Resuming playback...")
             player.play()
         }
+    }
+
+    @objc private func pausePlayback() {
+        player.pause()
     }
 
     deinit {
