@@ -346,86 +346,68 @@ struct TaskCategoryGridView: View {
             ? [Color(hex: "#1A1626"), Color(hex: "#0C0A18")]
             : [Color(hex: "#2A2436"), Color(hex: "#150F20")]
 
-        let medallionSize: CGFloat = isPad ? 64 : 42
-        let iconSize: CGFloat = isPad ? 24 : 16
-        let accentDotSize: CGFloat = isPad ? 16 : 11
-        let accentDotOffset = CGSize(width: isPad ? 22 : 15, height: isPad ? -20 : -14)
-        let checkmarkSize: CGFloat = isPad ? 28 : 20
-        let titleSize: CGFloat = isPad ? 22 : 16
-        let progressTextSize: CGFloat = isPad ? 15 : 11
-        let progressBarHeight: CGFloat = isPad ? 9 : 6
-        let cardSpacing: CGFloat = isPad ? 20 : 14
-        let cardPadding: CGFloat = isPad ? 20 : 14
+        let medallionSize: CGFloat = isPad ? 92 : 42
+        let iconSize: CGFloat = isPad ? 38 : 16
+        let accentDotSize: CGFloat = isPad ? 22 : 11
+        let accentDotOffset = CGSize(width: isPad ? 32 : 15, height: isPad ? -30 : -14)
+        let checkmarkSize: CGFloat = isPad ? 30 : 20
+        let titleSize: CGFloat = isPad ? 26 : 16
+        let progressTextSize: CGFloat = isPad ? 17 : 11
+        let progressBarHeight: CGFloat = isPad ? 10 : 6
+        let cardSpacing: CGFloat = isPad ? 22 : 14
+        let cardPadding: CGFloat = isPad ? 22 : 14
 
-        return VStack(alignment: .leading, spacing: cardSpacing) {
-            HStack(alignment: .top, spacing: 0) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            AngularGradient(
-                                colors: [goldBright, goldMain, goldDeep, goldMain, goldBright, goldGlow, goldBright],
-                                center: .center
-                            )
+        return VStack(spacing: cardSpacing) {
+            ZStack {
+                Circle()
+                    .fill(
+                        AngularGradient(
+                            colors: [goldBright, goldMain, goldDeep, goldMain, goldBright, goldGlow, goldBright],
+                            center: .center
                         )
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: medallionInner,
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                    )
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: medallionInner,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                        .padding(isPad ? 3.2 : 2.2)
-                    Image(systemName: category.typeIcon)
-                        .font(.system(size: iconSize, weight: .semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [goldGlow, goldMain],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
+                    )
+                    .padding(isPad ? 3.2 : 2.2)
+                Image(systemName: category.typeIcon)
+                    .font(.system(size: iconSize, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [goldGlow, goldMain],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
-                        .shadow(color: goldDeep.opacity(0.5), radius: 1, x: 0, y: 1)
-                }
-                .frame(width: medallionSize, height: medallionSize)
-                .shadow(color: goldDeep.opacity(dark ? 0.55 : 0.30), radius: isPad ? 7 : 5, x: 0, y: 3)
-                .overlay(
-                    Circle()
-                        .fill(accent)
-                        .frame(width: accentDotSize, height: accentDotSize)
-                        .overlay(
-                            Circle()
-                                .strokeBorder(
-                                    LinearGradient(
-                                        colors: [goldGlow, goldMain],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    ),
-                                    lineWidth: isPad ? 1.4 : 1
-                                )
-                        )
-                        .shadow(color: accent.opacity(0.6), radius: 3, x: 0, y: 1)
-                        .offset(x: accentDotOffset.width, y: accentDotOffset.height)
-                )
-
-                Spacer(minLength: 4)
-
-                if isComplete {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: checkmarkSize, weight: .semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [goldBright, goldMain, goldDeep],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .shadow(color: goldMain.opacity(0.55), radius: 4, x: 0, y: 2)
-                        .transition(.scale.combined(with: .opacity))
-                }
+                    )
+                    .shadow(color: goldDeep.opacity(0.5), radius: 1, x: 0, y: 1)
             }
+            .frame(width: medallionSize, height: medallionSize)
+            .shadow(color: goldDeep.opacity(dark ? 0.55 : 0.30), radius: isPad ? 7 : 5, x: 0, y: 3)
+            .overlay(
+                Circle()
+                    .fill(accent)
+                    .frame(width: accentDotSize, height: accentDotSize)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(
+                                LinearGradient(
+                                    colors: [goldGlow, goldMain],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: isPad ? 1.4 : 1
+                            )
+                    )
+                    .shadow(color: accent.opacity(0.6), radius: 3, x: 0, y: 1)
+                    .offset(x: accentDotOffset.width, y: accentDotOffset.height)
+            )
 
-            VStack(alignment: .leading, spacing: isPad ? 5 : 3) {
+            VStack(spacing: isPad ? 5 : 3) {
                 Text(category.typeTitle)
                     .font(.system(size: titleSize, weight: .semibold, design: .serif))
                     .foregroundStyle(
@@ -447,6 +429,7 @@ struct TaskCategoryGridView: View {
                     .tracking(0.8)
                     .monospacedDigit()
             }
+            .multilineTextAlignment(.center)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -491,8 +474,25 @@ struct TaskCategoryGridView: View {
             }
             .frame(height: progressBarHeight)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
         .padding(cardPadding)
+        .aspectRatio(0.82, contentMode: .fit)
+        .overlay(alignment: .topTrailing) {
+            if isComplete {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: checkmarkSize, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [goldBright, goldMain, goldDeep],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(color: goldMain.opacity(0.55), radius: 4, x: 0, y: 2)
+                    .padding(cardPadding)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
