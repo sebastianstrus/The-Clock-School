@@ -11,6 +11,7 @@ import SwiftUI
 struct SettingsView: View {
 
     @EnvironmentObject var settings: SettingsManager
+    @EnvironmentObject var store: StoreManager
     @Environment(\.colorScheme) var colorScheme
 
     @State private var showProgressAlert = false
@@ -18,6 +19,8 @@ struct SettingsView: View {
     @State private var showCacheAlert = false
     @State private var showingLanguageHelp = false
     @State private var showOnboarding: Bool = false
+    @State private var showPaywall = false
+    @State private var showRestoreAlert = false
 
     var learningSectionHeader: some View {
         HStack(spacing: 6) {
@@ -81,6 +84,27 @@ struct SettingsView: View {
                     
                 }
                 
+                Section(header: Text("Premium".localized)) {
+                    if store.isPremium {
+                        HStack {
+                            Text("Lifetime Access".localized)
+                            Spacer()
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(.green)
+                        }
+                    } else {
+                        Button("Unlock Full Access".localized) {
+                            showPaywall = true
+                        }
+                    }
+                    Button("Restore Purchases".localized) {
+                        Task {
+                            await store.restore()
+                            showRestoreAlert = true
+                        }
+                    }
+                }
+
                 Section(header: Text("Progress".localized)) {
                     Button("Reset Progress".localized, role: .destructive) {
                         showResetProgressConfirm = true
@@ -115,6 +139,18 @@ struct SettingsView: View {
             Button("Cancel".localized, role: .cancel) { }
         } message: {
             Text("This action cannot be undone.".localized)
+        }
+        .alert("Restore Complete".localized, isPresented: $showRestoreAlert) {
+            Button("OK".localized, role: .cancel) { }
+        } message: {
+            Text(store.isPremium
+                 ? "Your purchase has been restored.".localized
+                 : "No previous purchases found.".localized)
+        }
+        .fullScreenCover(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(settings)
+                .environmentObject(store)
         }
         .background( GradientBackground().ignoresSafeArea().opacity(settings.isDarkMode ? 1.0 : 0.0))
         .scrollContentBackground(settings.isDarkMode ? .hidden : .visible)

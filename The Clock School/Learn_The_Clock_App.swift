@@ -14,6 +14,7 @@ struct The_Clock_School_App: App {
     
     @StateObject private var settings = SettingsManager.shared
     @StateObject private var videoViewModel = VideoPlayerViewModel.shared
+    @StateObject private var store = StoreManager.shared
     
     
     var body: some Scene {
@@ -23,6 +24,7 @@ struct The_Clock_School_App: App {
                 WelcomeContentView()
                     .environmentObject(settings)
                     .environmentObject(videoViewModel)
+                    .environmentObject(store)
                     .preferredColorScheme(settings.isDarkMode ? .dark : .light)
                     .transition(.opacity)
                 
@@ -32,6 +34,10 @@ struct The_Clock_School_App: App {
                         .zIndex(1)
                 }
                 
+            }
+            .task {
+                await store.loadProducts()
+                await store.refreshEntitlements()
             }
 
         }

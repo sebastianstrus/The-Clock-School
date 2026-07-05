@@ -138,8 +138,10 @@ enum TaskCategory: Int, CaseIterable, Identifiable {
 struct TaskCategoryGridView: View {
 
     @EnvironmentObject var settings: SettingsManager
+    @EnvironmentObject var store: StoreManager
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var appeared = false
+    @State private var showPaywall = false
 
     private var dark: Bool { settings.isDarkMode }
     private var ds:   DS   { DS(dark: dark) }
@@ -170,13 +172,22 @@ struct TaskCategoryGridView: View {
                             sectionHeader(level)
                             LazyVGrid(columns: columns, spacing: columnSpacing) {
                                 ForEach(TaskCategory.allCases.filter { $0.difficulty == level }) { category in
-                                    NavigationLink(destination: ClockGridView(
-                                        settings: settings,
-                                        category: category
-                                    )) {
-                                        categoryCard(category)
+                                    if store.isCategoryUnlocked(category) {
+                                        NavigationLink(destination: ClockGridView(
+                                            settings: settings,
+                                            category: category
+                                        )) {
+                                            categoryCard(category)
+                                        }
+                                        .buttonStyle(PressableCardStyle())
+                                    } else {
+                                        Button {
+                                            showPaywall = true
+                                        } label: {
+                                            categoryCard(category)
+                                        }
+                                        .buttonStyle(PressableCardStyle())
                                     }
-                                    .buttonStyle(PressableCardStyle())
                                 }
                             }
                         }
@@ -216,6 +227,11 @@ struct TaskCategoryGridView: View {
         .toolbarBackground(dark ? Color(hex: "#120A1E") : Color(hex: "#EFE1B4"), for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .onAppear { appeared = true }
+        .fullScreenCover(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(settings)
+                .environmentObject(store)
+        }
     }
 
     private var premiumBackground: some View {
@@ -331,6 +347,7 @@ struct TaskCategoryGridView: View {
         let progress = settings.progress(forCategory: category.rawValue)
         let total = SettingsManager.tasksPerCategory
         let isComplete = progress >= total
+        let isLocked = !store.isCategoryUnlocked(category)
         let progressFraction = min(1.0, CGFloat(progress) / CGFloat(total))
 
         let goldGlow   = Color(hex: "#FFE9A8")
@@ -478,7 +495,20 @@ struct TaskCategoryGridView: View {
         .padding(cardPadding)
         .aspectRatio(0.82, contentMode: .fit)
         .overlay(alignment: .topTrailing) {
-            if isComplete {
+            if isLocked {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: checkmarkSize, weight: .semibold))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [goldBright, goldMain, goldDeep],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(color: goldMain.opacity(0.55), radius: 4, x: 0, y: 2)
+                    .padding(cardPadding)
+                    .transition(.scale.combined(with: .opacity))
+            } else if isComplete {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: checkmarkSize, weight: .semibold))
                     .foregroundStyle(
@@ -493,6 +523,7 @@ struct TaskCategoryGridView: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
+        .opacity(isLocked ? 0.65 : 1.0)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
