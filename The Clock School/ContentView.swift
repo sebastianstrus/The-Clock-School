@@ -614,39 +614,21 @@ struct ClockGridView: View {
 
     var body: some View {
         ZStack {
-            if dark {
-                LinearGradient(
-                    colors: [
-                        Color(hex: "#0D0D1F"),
-                        Color(hex: "#12122A"),
-                        Color(hex: "#0A0A18")
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+            difficultyBackground
                 .ignoresSafeArea()
-            } else {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.72, green: 0.88, blue: 0.95),
-                        Color(red: 0.55, green: 0.78, blue: 0.90),
-                        Color(red: 0.40, green: 0.68, blue: 0.82)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            }
 
             VStack(spacing: 28) {
                 if !viewModel.tasks.isEmpty {
-                    ProgressHeaderView(
-                        current: currentTaskIndex + 1,
-                        completed: currentTaskIndex,
-                        total: viewModel.tasks.count
-                    )
+                    VStack(spacing: 10) {
+                        difficultyBadge
+                        ProgressHeaderView(
+                            current: currentTaskIndex + 1,
+                            completed: currentTaskIndex,
+                            total: viewModel.tasks.count
+                        )
+                        .padding(.horizontal, 24)
+                    }
                     .padding(.top, 8)
-                    .padding(.horizontal, 24)
                 }
 
                 if !viewModel.tasks.isEmpty && currentTaskIndex < viewModel.tasks.count {
@@ -699,7 +681,7 @@ struct ClockGridView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(dark ? Color(hex: "#12122A") : .clear, for: .navigationBar)
+        .toolbarBackground(toolbarTintColor, for: .navigationBar)
         .toolbarBackground(dark ? .visible : .automatic, for: .navigationBar)
         .onAppear {
             viewModel.resetGame()
@@ -735,6 +717,145 @@ struct ClockGridView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Difficulty-Aware Background & Badge
+
+    private var difficultyBackground: some View {
+        let d = viewModel.difficulty
+        return ZStack {
+            LinearGradient(
+                colors: backgroundGradient(for: d),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            RadialGradient(
+                colors: [primaryTint(for: d).opacity(dark ? 0.28 : 0.55), .clear],
+                center: UnitPoint(x: 0.15, y: 0.10),
+                startRadius: 0,
+                endRadius: 340
+            )
+
+            RadialGradient(
+                colors: [secondaryTint(for: d).opacity(dark ? 0.32 : 0.35), .clear],
+                center: UnitPoint(x: 0.88, y: 0.92),
+                startRadius: 0,
+                endRadius: 380
+            )
+
+            RadialGradient(
+                colors: [.clear, Color.black.opacity(dark ? 0.40 : 0.10)],
+                center: .center,
+                startRadius: 220,
+                endRadius: 700
+            )
+        }
+    }
+
+    private func backgroundGradient(for d: DifficultyLevel) -> [Color] {
+        switch (d, dark) {
+        case (.easy, true):
+            return [Color(hex: "#08140E"), Color(hex: "#0E1D16"), Color(hex: "#050F0A")]
+        case (.easy, false):
+            return [Color(hex: "#EFF9F1"), Color(hex: "#DBEEE0"), Color(hex: "#BEDDC7")]
+        case (.medium, true):
+            return [Color(hex: "#170F08"), Color(hex: "#1D1408"), Color(hex: "#100804")]
+        case (.medium, false):
+            return [Color(hex: "#FEF7E6"), Color(hex: "#FDEBBF"), Color(hex: "#F8D28D")]
+        case (.hard, true):
+            return [Color(hex: "#150808"), Color(hex: "#1D0A0C"), Color(hex: "#0F0507")]
+        case (.hard, false):
+            return [Color(hex: "#FEF0F0"), Color(hex: "#FBD5D7"), Color(hex: "#F1AFB4")]
+        }
+    }
+
+    private func primaryTint(for d: DifficultyLevel) -> Color {
+        switch d {
+        case .easy:   return Color(hex: "#34D399")
+        case .medium: return Color(hex: "#FBBF24")
+        case .hard:   return Color(hex: "#F87171")
+        }
+    }
+
+    private func secondaryTint(for d: DifficultyLevel) -> Color {
+        switch d {
+        case .easy:   return Color(hex: "#10B981")
+        case .medium: return Color(hex: "#D97706")
+        case .hard:   return Color(hex: "#B91C1C")
+        }
+    }
+
+    private func difficultyAccentColor(_ d: DifficultyLevel) -> Color {
+        switch d {
+        case .easy:   return Color(hex: "#22C55E")
+        case .medium: return Color(hex: "#F59E0B")
+        case .hard:   return Color(hex: "#EF4444")
+        }
+    }
+
+    private func starCount(_ d: DifficultyLevel) -> Int {
+        switch d {
+        case .easy:   return 1
+        case .medium: return 2
+        case .hard:   return 3
+        }
+    }
+
+    private var toolbarTintColor: Color {
+        guard dark else { return .clear }
+        switch viewModel.difficulty {
+        case .easy:   return Color(hex: "#0A1810")
+        case .medium: return Color(hex: "#1A140A")
+        case .hard:   return Color(hex: "#180A0C")
+        }
+    }
+
+    private var difficultyBadge: some View {
+        let d = viewModel.difficulty
+        let stars = starCount(d)
+        let color = difficultyAccentColor(d)
+        return HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                HStack(spacing: 3) {
+                    ForEach(0..<3, id: \.self) { i in
+                        Circle()
+                            .fill(i < stars ? color : color.opacity(0.25))
+                            .frame(width: 6, height: 6)
+                    }
+                }
+                Text(d.localizedName.uppercased())
+                    .font(.system(size: 12, weight: .bold, design: .serif))
+                    .tracking(1.8)
+                    .foregroundColor(color)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color.white.opacity(dark ? 0.06 : 0.55))
+                    .overlay(Capsule().strokeBorder(color.opacity(dark ? 0.55 : 0.35), lineWidth: 1))
+            )
+
+            HStack(spacing: 6) {
+                Image(systemName: viewModel.category.typeIcon)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(viewModel.category.typeTitle.uppercased())
+                    .font(.system(size: 12, weight: .bold, design: .serif))
+                    .tracking(1.8)
+            }
+            .foregroundColor(dark ? Color.white.opacity(0.85) : Color.black.opacity(0.65))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                Capsule()
+                    .fill(Color.white.opacity(dark ? 0.06 : 0.55))
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(dark ? 0.12 : 0.7), lineWidth: 1))
+            )
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 24)
     }
 
     private func handleTaskSolved() {
