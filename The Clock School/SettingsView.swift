@@ -154,6 +154,7 @@ struct SettingsView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .tint(goldMain)
         }
         .navigationTitle("Settings".localized)
         .confirmationDialog(
@@ -191,7 +192,7 @@ struct SettingsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 ShareLink(
-                    item: URL(string: "https://apps.apple.com/app/6760045366")!,
+                    item: URL(string: "https://apps.apple.com/app/6787504939")!,
                     subject: Text("The Clock School".localized),
                     message: Text("Check out The Clock School - a great clock learning app!".localized)
                 ) {
