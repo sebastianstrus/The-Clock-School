@@ -47,7 +47,7 @@ enum Language: String {
         case "zh": self = .simplifiedChinese
         case "id": self = .indonesian
         case "da": self = .danish
-        case "no": self = .norwegian
+        case "no", "nb", "nn": self = .norwegian
         case "ar": self = .arabic
         case "hi": self = .hindi
         case "pa": self = .punjabi
