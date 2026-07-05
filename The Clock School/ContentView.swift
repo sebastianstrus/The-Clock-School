@@ -632,8 +632,6 @@ struct ClockGridView: View {
     
     @StateObject private var viewModel: ClockGameViewModel
     @State private var showCoins = false
-    @State private var shouldShowNameAlert = false
-    @State private var userName = ""
     @State private var currentTaskIndex: Int = 0
 
     init(settings: SettingsManager, category: TaskCategory) {
@@ -722,18 +720,6 @@ struct ClockGridView: View {
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.75), value: showCoins)
         .animation(.easeInOut(duration: 0.3), value: currentTaskIndex)
-        .alert("Congratulations!".localized, isPresented: $shouldShowNameAlert) {
-            TextField("Nickname".localized, text: $userName)
-            Button("Save".localized) { saveResultAndShowVictory() }
-            Button("Skip".localized, role: .cancel) { }
-        } message: {
-            Text("Enter your nickname to save the result".localized)
-        }
-        .onChange(of: showCoins) {
-            if showCoins {
-                shouldShowNameAlert = true
-            }
-        }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -908,15 +894,6 @@ struct ClockGridView: View {
         }
     }
 
-    private func saveResultAndShowVictory() {
-        viewModel.settings.saveGameResult(
-            name: userName.isEmpty ? "Anonymous" : userName,
-            difficulty: viewModel.difficulty,
-            exampleCount: viewModel.tasks.count,
-            time: 0,
-            is24HourClock: viewModel.settings.is24HourClock
-        )
-    }
 }
 
 // MARK: - Progress Header

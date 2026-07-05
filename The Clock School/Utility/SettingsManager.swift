@@ -132,7 +132,7 @@ class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
 
     static let categoryCount: Int = 9
-    static let tasksPerCategory: Int = 20
+    static let tasksPerCategory: Int = 100
 
     @AppStorage(UserDefaultsKeys.isDarkMode.rawValue) var isDarkMode: Bool = false
 
