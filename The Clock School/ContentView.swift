@@ -578,10 +578,10 @@ struct TaskCategoryGridView: View {
                 .strokeBorder(
                     LinearGradient(
                         colors: [
-                            goldGlow.opacity(dark ? 0.85 : 0.75),
                             goldMain.opacity(dark ? 0.55 : 0.55),
                             goldDeep.opacity(dark ? 0.70 : 0.60),
-                            goldBright.opacity(dark ? 0.55 : 0.50)
+                            goldDeep.opacity(dark ? 0.70 : 0.60),
+                            goldMain.opacity(dark ? 0.55 : 0.55),
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -594,16 +594,13 @@ struct TaskCategoryGridView: View {
                 .inset(by: 1.5)
                 .strokeBorder(
                     LinearGradient(
-                        colors: [Color.white.opacity(dark ? 0.05 : 0.35), Color.clear],
+                        colors: [Color.white.opacity(dark ? 0.05 : 0.35), Color.white.opacity(dark ? 0.05 : 0.35)],
                         startPoint: .top,
                         endPoint: .center
                     ),
                     lineWidth: 0.5
                 )
         )
-        .shadow(color: dark ? Color.black.opacity(0.60) : goldDeep.opacity(0.20), radius: 14, x: 0, y: 7)
-        .shadow(color: dark ? Color.black.opacity(0.35) : Color(hex: "#2A1F10").opacity(0.10), radius: 3, x: 0, y: 1)
-        .shadow(color: goldMain.opacity(dark ? 0.15 : 0.10), radius: 22, x: 0, y: 0)
     }
 
     private func difficultyColor(_ difficulty: DifficultyLevel) -> Color {
