@@ -69,6 +69,19 @@ struct PaywallView: View {
                     }
                     .padding(.top, 4)
 
+                    HStack(spacing: 20) {
+                        Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula")!) {
+                            Text("Terms of Service".localized)
+                                .font(.system(size: isPad ? 14 : 12, weight: .medium, design: .rounded))
+                                .foregroundColor(linkColor)
+                        }
+                        Link(destination: URL(string: "https://sebastianstrus.com/documents/the-clock-school/privacy-policy.html")!) {
+                            Text("Privacy Policy".localized)
+                                .font(.system(size: isPad ? 14 : 12, weight: .medium, design: .rounded))
+                                .foregroundColor(linkColor)
+                        }
+                    }
+
                     Text("No subscriptions. No ads.".localized)
                         .font(.system(size: isPad ? 14 : 12, weight: .regular, design: .rounded))
                         .foregroundColor(subtitleColor.opacity(0.75))
@@ -225,7 +238,7 @@ struct PaywallView: View {
         VStack(alignment: .leading, spacing: isPad ? 18 : 14) {
             featureRow(
                 icon: "lock.open.fill",
-                title: "Unlock Medium & Hard".localized,
+                title: "Unlock Level 2 & Level 3".localized,
                 subtitle: "Access all 6 premium task cards".localized
             )
             featureRow(

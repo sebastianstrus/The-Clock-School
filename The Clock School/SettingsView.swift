@@ -151,6 +151,14 @@ struct SettingsView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    Link(destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula")!) {
+                        HStack {
+                            Label("Terms of Service".localized, systemImage: "doc.text.fill")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
@@ -422,17 +430,17 @@ struct StatisticsView: View {
         VStack {
             Text("").frame(height: 0)
             List {
-                Section(header: sectionHeader("Easy".localized)) {
+                Section(header: sectionHeader(DifficultyLevel.easy.localizedName)) {
                     columnHeaders()
                     resultsSection(for: .easy)
                 }
-                
-                Section(header: sectionHeader("Medium".localized)) {
+
+                Section(header: sectionHeader(DifficultyLevel.medium.localizedName)) {
                     columnHeaders()
                     resultsSection(for: .medium)
                 }
-                
-                Section(header: sectionHeader("Hard".localized)) {
+
+                Section(header: sectionHeader(DifficultyLevel.hard.localizedName)) {
                     columnHeaders()
                     resultsSection(for: .hard)
                 }

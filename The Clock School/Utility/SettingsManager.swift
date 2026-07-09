@@ -121,9 +121,9 @@ enum DifficultyLevel: Int, CaseIterable, Codable {
     
     var localizedName: String {
         switch self {
-        case .easy: return "Easy".localized
-        case .medium: return "Medium".localized
-        case .hard: return "Hard".localized
+        case .easy: return "Level 1".localized
+        case .medium: return "Level 2".localized
+        case .hard: return "Level 3".localized
         }
     }
 }
