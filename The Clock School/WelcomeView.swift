@@ -27,7 +27,7 @@ struct WelcomeView: View {
     
     @State private var showSettings = false
         
-    let titleSize: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 60 : 40
+    let titleSize: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 60 : 36
     let subtitleSize: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 35 : 20
     
     let startButtonWidth: CGFloat = UIDevice.current.userInterfaceIdiom == .pad ? 150 : 120
@@ -51,14 +51,17 @@ struct WelcomeView: View {
                 
                 Group {
                     Text("The Clock School")
-                        .font(.system(size: titleSize, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .shadow(color: .black.opacity(0.8), radius: 3, x: 3, y: 3)
+                        .font(.system(size: titleSize, weight: .bold, design: .serif))
+                        .tracking(1.5)
+                        .foregroundStyle(.white.opacity(0.95))
+                        .shadow(color: .black.opacity(0.6), radius: 8, x: 0, y: 2)
                     
                     Text("Discover the Magic of the Time")
-                        .font(.system(size: subtitleSize, weight: .regular, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.9))
-                        .shadow(color: .black.opacity(0.8), radius: 2, x: 2, y: 2)
+                        .font(.system(size: subtitleSize, weight: .light, design: .serif))
+                        .italic()
+                        .tracking(0.8)
+                        .foregroundStyle(.white.opacity(0.85))
+                        .shadow(color: .black.opacity(0.6), radius: 6, x: 0, y: 2)
                 }
                 
                 Spacer()
@@ -69,7 +72,8 @@ struct WelcomeView: View {
                             //.environmentObject(settings)
                         ) {
                             Text("Start Learning")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.system(size: 20, weight: .semibold, design: .serif))
+                                .tracking(1.2)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 40)
                                 .padding(.vertical, 16)
